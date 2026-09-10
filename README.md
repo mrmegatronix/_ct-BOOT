@@ -90,6 +90,16 @@ sudo ./update-usb-os.sh /dev/sdX
 
 ---
 
+## Quick-Launch on Running PC / Mac
+
+When plugging the USB drive into an already booted computer, open the **`KIOSKDATA`** drive and double-click the file for your operating system:
+
+* **Windows**: Double-click `WINDOWS-Double-Click-To-Open.bat` (launches Edge/Chrome in fullscreen kiosk mode).
+* **Linux**: Double-click `LINUX-Double-Click-To-Open.desktop` (or run `./LINUX-Run-In-Terminal.sh`).
+* **macOS**: Double-click `MAC-Double-Click-To-Open.command` (launches Chrome/Edge in fullscreen kiosk mode).
+
+---
+
 ## Customizing Signage Content
 
 Insert the USB drive into your workstation after running `make-usb.sh`:
