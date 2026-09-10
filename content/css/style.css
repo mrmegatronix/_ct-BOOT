@@ -1,0 +1,215 @@
+:root {
+    --bg-primary: #0b0f19;
+    --bg-card: #151c2e;
+    --accent-blue: #00d2ff;
+    --accent-glow: rgba(0, 210, 255, 0.4);
+    --text-main: #f3f4f6;
+    --text-muted: #9ca3af;
+    --border-color: #232f48;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+body {
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background-color: var(--bg-primary);
+    color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header bar */
+.kiosk-header {
+    height: 90px;
+    width: 100%;
+    padding: 0 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--border-color);
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(10px);
+}
+
+.kiosk-title {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--accent-blue);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Clock with blinking colon */
+.kiosk-clock {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #ffffff;
+    white-space: nowrap;
+}
+
+.colon-blink {
+    animation: blink-animation 1s infinite;
+}
+
+@keyframes blink-animation {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+}
+
+/* Status indicator badge */
+.status-badge {
+    padding: 6px 16px;
+    border-radius: 9999px;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    background: #1e293b;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+
+.status-badge.live {
+    color: #10b981;
+    border-color: #059669;
+}
+
+.status-badge.paused {
+    color: #f59e0b;
+    border-color: #d97706;
+}
+
+.status-badge.locked {
+    color: #ef4444;
+    border-color: #dc2626;
+}
+
+/* Main presentation canvas */
+.kiosk-viewport {
+    position: relative;
+    flex: 1;
+    width: 100%;
+    height: calc(1080px - 90px - 70px);
+    overflow: hidden;
+}
+
+.slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 48px;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.4s ease-in-out;
+}
+
+.slide.active {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 1;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    width: 100%;
+    max-width: 1760px;
+}
+
+.info-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.info-card h3 {
+    font-size: 24px;
+    color: var(--accent-blue);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.info-card p {
+    font-size: 18px;
+    line-height: 1.5;
+    color: var(--text-muted);
+}
+
+.info-card .metric {
+    font-size: 48px;
+    font-weight: 800;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Footer / Progress bar */
+.kiosk-footer {
+    height: 70px;
+    width: 100%;
+    padding: 0 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 2px solid var(--border-color);
+    background: rgba(15, 23, 42, 0.95);
+    font-size: 16px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.footer-nav-help {
+    display: flex;
+    gap: 20px;
+}
+
+.key-tag {
+    background: #334155;
+    color: #ffffff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.progress-track {
+    position: absolute;
+    bottom: 68px;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: #1e293b;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent-blue);
+    box-shadow: 0 0 10px var(--accent-glow);
+    transition: width 0.1s linear;
+}

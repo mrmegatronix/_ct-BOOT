@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Autonomous Kiosk Display</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Top Bar -->
+    <header class="kiosk-header">
+        <div class="kiosk-title">SYSTEM MONITOR &amp; DIGITAL SIGNAGE</div>
+        <div class="kiosk-clock" id="kiosk-clock">00<span class="colon-blink">:</span>00<span class="colon-blink">:</span>00</div>
+        <div class="status-badge live" id="status-badge">LIVE (10s)</div>
+    </header>
+
+    <!-- Slide Viewport -->
+    <main class="kiosk-viewport">
+        <!-- Module A: Slide 1 -->
+        <section class="slide active" data-module="system">
+            <div class="card-grid">
+                <div class="info-card">
+                    <h3>BOOT STATUS</h3>
+                    <div class="metric">100% READY</div>
+                    <p>Self-contained USB image booted into RAM with OverlayFS protection.</p>
+                </div>
+                <div class="info-card">
+                    <h3>STORAGE HEALTH</h3>
+                    <div class="metric">READ-ONLY</div>
+                    <p>Protected squashfs filesystem. Hardware pull-safe with zero corruption risk.</p>
+                </div>
+                <div class="info-card">
+                    <h3>DISPLAY PIPELINE</h3>
+                    <div class="metric">1080P 60FPS</div>
+                    <p>Chromium kiosk engine with hardware acceleration and auto cursor hiding.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module A: Slide 2 -->
+        <section class="slide" data-module="system">
+            <div class="card-grid">
+                <div class="info-card">
+                    <h3>PARTITION SCHEME</h3>
+                    <div class="metric">HYBRID DUAL</div>
+                    <p>Partition 1: Boot/OS (ISO/SquashFS). Partition 2: KIOSKDATA (FAT32 user assets).</p>
+                </div>
+                <div class="info-card">
+                    <h3>SYSTEM MEMORY</h3>
+                    <div class="metric">TMPFS ACTIVE</div>
+                    <p>All transient browser logs and caches are written exclusively to volatile RAM.</p>
+                </div>
+                <div class="info-card">
+                    <h3>FAILOVER &amp; RECOVERY</h3>
+                    <div class="metric">AUTO-RESTART</div>
+                    <p>Process supervisor restarts browser immediately if terminated or crashed.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module B: Slide 3 -->
+        <section class="slide" data-module="network">
+            <div class="card-grid">
+                <div class="info-card">
+                    <h3>NETWORK ORCHESTRATION</h3>
+                    <div class="metric">STANDALONE</div>
+                    <p>Zero internet required. Built-in local web server delivers content directly.</p>
+                </div>
+                <div class="info-card">
+                    <h3>REMOTE MANAGEMENT</h3>
+                    <div class="metric">PORT 8080</div>
+                    <p>Optional LAN access for administration and remote control triggers.</p>
+                </div>
+                <div class="info-card">
+                    <h3>EXPANSION READY</h3>
+                    <div class="metric">PLUG &amp; PLAY</div>
+                    <p>Drop custom HTML, JS, and CSS files into the USB drive to update signage.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Progress Bar Indicator -->
+        <div class="progress-track">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+    </main>
+
+    <!-- Footer Controls Bar -->
+    <footer class="kiosk-footer">
+        <div class="footer-nav-help">
+            <span><span class="key-tag">&larr;</span> / <span class="key-tag">&rarr;</span> Prev / Next</span>
+            <span><span class="key-tag">&uarr;</span> Restart Module</span>
+            <span><span class="key-tag">&darr;</span> Next Module</span>
+            <span><span class="key-tag">SPACE</span> Pause</span>
+            <span><span class="key-tag">0</span> Lock</span>
+            <span><span class="key-tag">1-9</span> Duration (10s-90s)</span>
+        </div>
+        <div class="footer-shortcuts">
+            <span><span class="key-tag">A</span> Admin</span>
+            <span><span class="key-tag">R</span> Remote</span>
+        </div>
+    </footer>
+
+    <script src="js/kiosk-controller.js"></script>
+</body>
+</html>

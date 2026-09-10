@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080, initial-scale=1.0">
+    <title>Kiosk Remote Control</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .remote-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            max-width: 1200px;
+            margin: 60px auto;
+            width: 100%;
+        }
+        .remote-btn {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            color: #ffffff;
+            padding: 32px;
+            border-radius: 16px;
+            font-size: 22px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s ease;
+        }
+        .remote-btn:hover {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+        .remote-btn span.sub {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+    </style>
+</head>
+<body>
+    <header class="kiosk-header">
+        <div class="kiosk-title">REMOTE INTERFACE</div>
+        <div class="kiosk-clock" id="kiosk-clock">00<span class="colon-blink">:</span>00<span class="colon-blink">:</span>00</div>
+        <div class="status-badge live">READY</div>
+    </header>
+
+    <div class="remote-grid">
+        <button class="remote-btn" onclick="sendAction('prev')">
+            <span>&larr; PREVIOUS</span>
+            <span class="sub">Key: ArrowLeft</span>
+        </button>
+        <button class="remote-btn" onclick="sendAction('pause')">
+            <span>&#10074;&#10074; / &#9658; PAUSE / PLAY</span>
+            <span class="sub">Key: Space</span>
+        </button>
+        <button class="remote-btn" onclick="sendAction('next')">
+            <span>NEXT &rarr;</span>
+            <span class="sub">Key: ArrowRight</span>
+        </button>
+        <button class="remote-btn" onclick="sendAction('restart')">
+            <span>&#8635; RESTART MODULE</span>
+            <span class="sub">Key: ArrowUp</span>
+        </button>
+        <button class="remote-btn" onclick="sendAction('next-mod')">
+            <span>&#8681; NEXT MODULE</span>
+            <span class="sub">Key: ArrowDown</span>
+        </button>
+        <button class="remote-btn" onclick="sendAction('lock')">
+            <span>&#128274; FREEZE LOCK</span>
+            <span class="sub">Key: 0</span>
+        </button>
+    </div>
+
+    <script>
+        const clock = document.getElementById('kiosk-clock');
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            clock.innerHTML = `${h}<span class="colon-blink">:</span>${m}<span class="colon-blink">:</span>${s}`;
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        function sendAction(action) {
+            console.log('Action dispatched:', action);
+            alert('Triggered: ' + action);
+        }
+    </script>
+</body>
+</html>

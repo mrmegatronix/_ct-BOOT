@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080, initial-scale=1.0">
+    <title>Kiosk Admin Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 40px auto;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .form-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .form-row label {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--accent-blue);
+            white-space: nowrap;
+        }
+        input, select, textarea {
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            color: #ffffff;
+            font-size: 18px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            outline: none;
+            width: 100%;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent-blue);
+        }
+        .btn-group {
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .btn {
+            background: var(--accent-blue);
+            color: #0b0f19;
+            font-weight: 700;
+            font-size: 16px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <header class="kiosk-header">
+        <div class="kiosk-title">ADMIN CONTROL CENTER</div>
+        <div class="kiosk-clock" id="kiosk-clock">00<span class="colon-blink">:</span>00<span class="colon-blink">:</span>00</div>
+        <div class="status-badge live">AUTHENTICATED</div>
+    </header>
+
+    <div class="admin-container">
+        <div class="form-row">
+            <label for="kiosk-url">Target Display URL / Path</label>
+            <input type="text" id="kiosk-url" value="http://localhost:8080/index.html">
+        </div>
+        <div class="form-row">
+            <label for="default-duration">Default Slide Duration (Seconds)</label>
+            <select id="default-duration">
+                <option value="10">10 Seconds</option>
+                <option value="20">20 Seconds</option>
+                <option value="30">30 Seconds</option>
+                <option value="60">60 Seconds</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <label for="custom-css">Custom CSS Injections</label>
+            <textarea id="custom-css" rows="4" placeholder="/* Custom styling overrides */"></textarea>
+        </div>
+        <div class="btn-group">
+            <button class="btn" onclick="alert('Settings saved to temporary session.')">Save Changes</button>
+            <button class="btn" style="background:#334155;color:#fff;" onclick="window.close()">Close Admin</button>
+        </div>
+    </div>
+
+    <script>
+        const clock = document.getElementById('kiosk-clock');
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            clock.innerHTML = `${h}<span class="colon-blink">:</span>${m}<span class="colon-blink">:</span>${s}`;
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>

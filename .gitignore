@@ -1,0 +1,9 @@
+# Build artifacts & temporary directories
+output/
+build/
+build_mnt/
+*.img
+*.iso
+*.log
+.DS_Store
+Thumbs.db

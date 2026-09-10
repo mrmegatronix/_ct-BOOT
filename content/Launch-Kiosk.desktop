@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Launch Fullscreen Kiosk
+Comment=Open Web Kiosk in Fullscreen
+Exec=sh -c '"$(dirname "$1")/launch-kiosk.sh"' dummy %k
+Icon=web-browser
+Terminal=false
+Categories=Utility;

@@ -1,0 +1,24 @@
+[Unit]
+Description=Autonomous Fullscreen Web Kiosk
+After=systemd-user-sessions.service plymouth-quit-wait.service kiosk-mount.service
+Conflicts=getty@tty1.service
+
+[Service]
+User=kiosk
+Group=kiosk
+Type=simple
+PAMName=login
+WorkingDirectory=/home/kiosk
+StandardInput=tty
+StandardOutput=journal
+StandardError=journal
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+ExecStart=/usr/bin/xinit /home/kiosk/.xinitrc -- /usr/bin/X :0 -nocursor -s 0 -dpms vt1
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
