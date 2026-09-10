@@ -73,12 +73,14 @@
             <input type="text" id="kiosk-url" value="http://localhost:8080/index.html">
         </div>
         <div class="form-row">
-            <label for="default-duration">Default Slide Duration (Seconds)</label>
+            <label for="default-duration">Default Slide Duration</label>
             <select id="default-duration">
-                <option value="10">10 Seconds</option>
+                <option value="0">No Time Limit (Manual Advance Only)</option>
+                <option value="10" selected>10 Seconds</option>
                 <option value="20">20 Seconds</option>
                 <option value="30">30 Seconds</option>
                 <option value="60">60 Seconds</option>
+                <option value="90">90 Seconds</option>
             </select>
         </div>
         <div class="form-row">
@@ -86,12 +88,22 @@
             <textarea id="custom-css" rows="4" placeholder="/* Custom styling overrides */"></textarea>
         </div>
         <div class="btn-group">
-            <button class="btn" onclick="alert('Settings saved to temporary session.')">Save Changes</button>
+            <button class="btn" onclick="saveSettings()">Save Changes</button>
             <button class="btn" style="background:#334155;color:#fff;" onclick="window.close()">Close Admin</button>
         </div>
     </div>
 
     <script>
+        const durationSelect = document.getElementById('default-duration');
+        const savedDur = localStorage.getItem('kiosk_duration');
+        if (savedDur !== null) {
+            durationSelect.value = savedDur;
+        }
+
+        function saveSettings() {
+            localStorage.setItem('kiosk_duration', durationSelect.value);
+            alert('Settings saved. Applied to kiosk presentation.');
+        }
         const clock = document.getElementById('kiosk-clock');
         function updateClock() {
             const now = new Date();

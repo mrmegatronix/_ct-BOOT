@@ -97,6 +97,11 @@ body {
     border-color: #dc2626;
 }
 
+.status-badge.manual {
+    color: #38bdf8;
+    border-color: #0284c7;
+}
+
 /* Main presentation canvas */
 .kiosk-viewport {
     position: relative;

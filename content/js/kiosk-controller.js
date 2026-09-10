@@ -10,7 +10,22 @@ class KioskController {
         this.currentModuleIndex = 0;
         this.modules = this.groupSlidesByModule();
 
-        this.slideDurationSec = 10; // Default 10s
+        this.savedActiveDuration = 10;
+        const urlParams = new URLSearchParams(window.location.search);
+        const paramDuration = urlParams.get('duration');
+        const savedDuration = localStorage.getItem('kiosk_duration');
+
+        if (paramDuration !== null) {
+            this.slideDurationSec = parseInt(paramDuration, 10);
+        } else if (savedDuration !== null) {
+            this.slideDurationSec = parseInt(savedDuration, 10);
+        } else {
+            this.slideDurationSec = 10; // Default 10s
+        }
+        if (this.slideDurationSec > 0) {
+            this.savedActiveDuration = this.slideDurationSec;
+        }
+
         this.isPaused = false;
         this.isLocked = false;
         this.timer = null;
@@ -87,6 +102,11 @@ class KioskController {
                 case 'Spacebar':
                     e.preventDefault();
                     this.togglePause();
+                    break;
+                case 'm':
+                case 'M':
+                    e.preventDefault();
+                    this.toggleManualMode();
                     break;
                 case 'a':
                 case 'A':
@@ -167,8 +187,21 @@ class KioskController {
         this.updateStatusBadge();
     }
 
+    toggleManualMode() {
+        if (this.slideDurationSec === 0) {
+            this.setDuration(this.savedActiveDuration || 10);
+        } else {
+            this.savedActiveDuration = this.slideDurationSec;
+            this.setDuration(0);
+        }
+    }
+
     setDuration(seconds) {
         this.slideDurationSec = seconds;
+        if (seconds > 0) {
+            this.savedActiveDuration = seconds;
+        }
+        localStorage.setItem('kiosk_duration', seconds);
         this.updateStatusBadge();
         this.restartActiveTimer();
     }
@@ -181,6 +214,9 @@ class KioskController {
         } else if (this.isPaused) {
             this.statusBadge.textContent = 'PAUSED';
             this.statusBadge.className = 'status-badge paused';
+        } else if (this.slideDurationSec === 0) {
+            this.statusBadge.textContent = 'MANUAL (NO LIMIT)';
+            this.statusBadge.className = 'status-badge manual';
         } else {
             this.statusBadge.textContent = `LIVE (${this.slideDurationSec}s)`;
             this.statusBadge.className = 'status-badge live';
@@ -192,9 +228,16 @@ class KioskController {
         this.elapsedMs = 0;
         this.updateStatusBadge();
 
+        if (this.slideDurationSec === 0) {
+            if (this.progressFill) {
+                this.progressFill.style.width = '0%';
+            }
+            return;
+        }
+
         const tickInterval = 50;
         this.progressInterval = setInterval(() => {
-            if (this.isPaused || this.isLocked) {
+            if (this.isPaused || this.isLocked || this.slideDurationSec === 0) {
                 return;
             }
 
@@ -223,6 +266,10 @@ class KioskController {
         this.elapsedMs = 0;
         if (this.progressFill) {
             this.progressFill.style.width = '0%';
+        }
+        if (this.slideDurationSec === 0) {
+            this.stopTimer();
+            return;
         }
         if (!this.progressInterval) {
             this.startTimer();
