@@ -111,6 +111,17 @@ body {
     overflow: hidden;
 }
 
+/* Clean Mode (Hide Top/Bottom Banners) */
+body.hide-banners .kiosk-header,
+body.hide-banners .kiosk-footer,
+body.hide-banners .progress-track {
+    display: none !important;
+}
+
+body.hide-banners .kiosk-viewport {
+    height: 1080px !important;
+}
+
 .slide {
     position: absolute;
     top: 0;

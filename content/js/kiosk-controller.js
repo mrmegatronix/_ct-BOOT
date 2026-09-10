@@ -152,6 +152,11 @@ class KioskController {
                     e.preventDefault();
                     this.toggleManualMode();
                     break;
+                case 'c':
+                case 'C':
+                    e.preventDefault();
+                    this.toggleBanners();
+                    break;
                 case 'a':
                 case 'A':
                     e.preventDefault();
@@ -238,6 +243,10 @@ class KioskController {
             this.savedActiveDuration = this.slideDurationSec;
             this.setDuration(0);
         }
+    }
+
+    toggleBanners() {
+        document.body.classList.toggle('hide-banners');
     }
 
     setDuration(seconds) {
