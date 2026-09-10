@@ -40,10 +40,54 @@ class KioskController {
     }
 
     init() {
+        this.loadConfiguredUrlSlides();
         this.initClock();
         this.bindKeyboardShortcuts();
         this.showSlide(0);
         this.startTimer();
+    }
+
+    loadConfiguredUrlSlides() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlsRaw = urlParams.get('urls') || localStorage.getItem('kiosk_slide_urls');
+        if (!urlsRaw || !urlsRaw.trim()) return;
+
+        const urlList = urlsRaw.split(/[\r\n,]+/).map(u => u.trim()).filter(u => u.length > 0 && !u.startsWith('#'));
+        if (urlList.length === 0) return;
+
+        const viewport = document.querySelector('.kiosk-viewport');
+        if (!viewport) return;
+
+        const progressTrack = document.querySelector('.progress-track');
+        viewport.querySelectorAll('.slide').forEach(s => s.remove());
+
+        urlList.forEach((url, idx) => {
+            const slide = document.createElement('section');
+            slide.className = 'slide' + (idx === 0 ? ' active' : '');
+            slide.dataset.module = `url-${idx}`;
+            slide.style.padding = '0';
+            slide.style.width = '100%';
+            slide.style.height = '100%';
+
+            const iframe = document.createElement('iframe');
+            iframe.src = url;
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.border = 'none';
+            iframe.style.display = 'block';
+            iframe.style.overflow = 'hidden';
+            iframe.title = `Slide ${idx + 1}`;
+
+            slide.appendChild(iframe);
+            if (progressTrack) {
+                viewport.insertBefore(slide, progressTrack);
+            } else {
+                viewport.appendChild(slide);
+            }
+        });
+
+        this.slides = Array.from(document.querySelectorAll('.slide'));
+        this.modules = this.groupSlidesByModule();
     }
 
     groupSlidesByModule() {

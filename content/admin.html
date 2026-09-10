@@ -84,8 +84,15 @@
             </select>
         </div>
         <div class="form-row">
+            <label for="slide-urls">Slide URLs / Web Pages (One per line)</label>
+            <textarea id="slide-urls" rows="6" placeholder="weather.html&#10;https://your-dashboard.com&#10;https://news.example.com"></textarea>
+            <small style="color:var(--text-muted);font-size:14px;margin-top:4px;">
+                Enter URLs to display as rotating slides (e.g. <code>weather.html</code>, <code>https://...</code>). Leave empty to display built-in default modules.
+            </small>
+        </div>
+        <div class="form-row">
             <label for="custom-css">Custom CSS Injections</label>
-            <textarea id="custom-css" rows="4" placeholder="/* Custom styling overrides */"></textarea>
+            <textarea id="custom-css" rows="3" placeholder="/* Custom styling overrides */"></textarea>
         </div>
         <div class="btn-group">
             <button class="btn" onclick="saveSettings()">Save Changes</button>
@@ -95,14 +102,21 @@
 
     <script>
         const durationSelect = document.getElementById('default-duration');
+        const urlsTextarea = document.getElementById('slide-urls');
         const savedDur = localStorage.getItem('kiosk_duration');
+        const savedUrls = localStorage.getItem('kiosk_slide_urls');
+
         if (savedDur !== null) {
             durationSelect.value = savedDur;
+        }
+        if (savedUrls !== null) {
+            urlsTextarea.value = savedUrls;
         }
 
         function saveSettings() {
             localStorage.setItem('kiosk_duration', durationSelect.value);
-            alert('Settings saved. Applied to kiosk presentation.');
+            localStorage.setItem('kiosk_slide_urls', urlsTextarea.value.trim());
+            alert('Settings saved. Kiosk slides updated.');
         }
         const clock = document.getElementById('kiosk-clock');
         function updateClock() {
