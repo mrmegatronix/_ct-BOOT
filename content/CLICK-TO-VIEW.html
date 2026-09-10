@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Launching Kiosk...</title>
+    <style>
+        body {
+            margin: 0;
+            background: #0b0f19;
+            color: #00d2ff;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            cursor: pointer;
+            text-align: center;
+        }
+        h1 { font-size: 3rem; margin-bottom: 1rem; }
+        p { font-size: 1.5rem; color: #9ca3af; }
+        .btn {
+            background: #00d2ff;
+            color: #0b0f19;
+            font-weight: bold;
+            font-size: 1.5rem;
+            padding: 16px 32px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body onclick="launch()">
+    <h1>WEB KIOSK DISPLAY</h1>
+    <p>Click anywhere to launch fullscreen</p>
+    <button class="btn" onclick="launch()">ENTER FULLSCREEN</button>
+
+    <script>
+        function launch() {
+            const el = document.documentElement;
+            if (el.requestFullscreen) {
+                el.requestFullscreen().then(() => {
+                    window.location.href = 'index.html';
+                }).catch(() => {
+                    window.location.href = 'index.html';
+                });
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
+        // Auto-redirect if already fullscreen
+        if (window.innerHeight === screen.height) {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
