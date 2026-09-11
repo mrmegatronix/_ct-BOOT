@@ -80,6 +80,26 @@
             <span>&#9974; HIDE / SHOW BANNERS</span>
             <span class="sub">Key: C (Clean View)</span>
         </button>
+        <button class="remote-btn" onclick="postApi('/api/system/screen-off')">
+            <span>&#9790; SCREEN SLEEP</span>
+            <span class="sub">Display Power Off</span>
+        </button>
+        <button class="remote-btn" onclick="postApi('/api/system/screen-on')">
+            <span>&#9788; SCREEN WAKE</span>
+            <span class="sub">Display Power On</span>
+        </button>
+        <button class="remote-btn" onclick="postApi('/api/system/volume?action=toggle')">
+            <span>&#128266; MUTE AUDIO</span>
+            <span class="sub">Volume Toggle</span>
+        </button>
+        <button class="remote-btn" style="border-color:#d97706;" onclick="if(confirm('Reboot computer?')) postApi('/api/system/reboot')">
+            <span>&#9888; REBOOT SYSTEM</span>
+            <span class="sub">Restart Host PC</span>
+        </button>
+        <button class="remote-btn" style="border-color:#dc2626;" onclick="if(confirm('Shutdown computer?')) postApi('/api/system/poweroff')">
+            <span>&#9211; SHUTDOWN</span>
+            <span class="sub">Power Off Host PC</span>
+        </button>
     </div>
 
     <script>
@@ -93,6 +113,13 @@
         }
         updateClock();
         setInterval(updateClock, 1000);
+
+        function postApi(endpoint) {
+            fetch(endpoint, { method: 'POST' })
+                .then(r => r.json())
+                .then(d => alert(d.message || 'Success'))
+                .catch(e => alert('Error: ' + e));
+        }
 
         function sendAction(action) {
             console.log('Action dispatched:', action);

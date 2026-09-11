@@ -16,9 +16,10 @@ if [ -d "/mnt/kiosk-data" ] && [ -f "/mnt/kiosk-data/index.html" ]; then
     CONTENT_DIR="/mnt/kiosk-data"
 fi
 
-# Start local lightweight HTTP server
-cd "$CONTENT_DIR"
-python3 -m http.server 8080 --bind 127.0.0.1 >/dev/null 2>&1 &
+# Start local kiosk API & HTTP server
+export CONTENT_DIR
+export LOCAL_SERVER_PORT=8080
+python3 /usr/local/bin/kiosk-server.py >/dev/null 2>&1 &
 SERVER_PID=$!
 
 # Cleanup on exit

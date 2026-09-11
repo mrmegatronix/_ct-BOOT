@@ -1,0 +1,1 @@
+kiosk ALL=(ALL) NOPASSWD: /bin/systemctl reboot, /bin/systemctl poweroff, /sbin/reboot, /sbin/poweroff, /usr/bin/systemctl reboot, /usr/bin/systemctl poweroff

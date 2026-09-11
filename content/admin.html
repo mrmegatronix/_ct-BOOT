@@ -98,6 +98,28 @@
             <button class="btn" onclick="saveSettings()">Save Changes</button>
             <button class="btn" style="background:#334155;color:#fff;" onclick="window.close()">Close Admin</button>
         </div>
+
+        <hr style="border:none;border-top:1px solid var(--border-color);margin:24px 0 16px 0;">
+
+        <!-- Computer & Hardware Control Section -->
+        <h3 style="color:var(--accent-blue);font-size:22px;">COMPUTER &amp; HARDWARE CONTROLS</h3>
+        <div id="telemetry-bar" style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px;background:#0f172a;padding:16px;border-radius:8px;border:1px solid var(--border-color);font-size:15px;">
+            <div><strong>Host:</strong> <span id="stat-host">Loading...</span></div>
+            <div><strong>IP Address:</strong> <span id="stat-ip">Loading...</span></div>
+            <div><strong>Uptime:</strong> <span id="stat-uptime">Loading...</span></div>
+            <div><strong>Memory:</strong> <span id="stat-ram">Loading...</span></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;margin-top:12px;">
+            <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/restart-browser')">&#8635; Restart Browser</button>
+            <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/screen-off')">&#9790; Screen Sleep (DPMS Off)</button>
+            <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/screen-on')">&#9788; Screen Wake (DPMS On)</button>
+            <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/rotate?dir=normal')">&#8634; Rotate Landscape (Normal)</button>
+            <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/rotate?dir=right')">&#8635; Rotate Portrait (90°)</button>
+            <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/volume?action=toggle')">&#128266; Mute / Unmute Audio</button>
+            <button class="btn" style="background:#d97706;color:#0b0f19;" onclick="if(confirm('Reboot this computer now?')) sysAction('/api/system/reboot')">&#9888; Reboot Computer</button>
+            <button class="btn" style="background:#dc2626;color:#ffffff;" onclick="if(confirm('Power off this computer now?')) sysAction('/api/system/poweroff')">&#9211; Shutdown / Power Off</button>
+        </div>
     </div>
 
     <script>
@@ -118,6 +140,37 @@
             localStorage.setItem('kiosk_slide_urls', urlsTextarea.value.trim());
             alert('Settings saved. Kiosk slides updated.');
         }
+
+        function sysAction(endpoint) {
+            fetch(endpoint, { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    alert(data.message || 'Action sent successfully');
+                })
+                .catch(err => {
+                    alert('System command error: ' + err);
+                });
+        }
+
+        function fetchTelemetry() {
+            fetch('/api/system/stats')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('stat-host').textContent = data.hostname || 'Unknown';
+                    document.getElementById('stat-ip').textContent = data.ip || 'Unknown';
+                    document.getElementById('stat-uptime').textContent = data.uptime || 'Unknown';
+                    document.getElementById('stat-ram').textContent = data.memory || 'Unknown';
+                })
+                .catch(() => {
+                    document.getElementById('stat-host').textContent = 'Kiosk Host';
+                    document.getElementById('stat-ip').textContent = window.location.hostname;
+                    document.getElementById('stat-uptime').textContent = 'Active';
+                    document.getElementById('stat-ram').textContent = 'Online';
+                });
+        }
+        fetchTelemetry();
+        setInterval(fetchTelemetry, 10000);
+
         const clock = document.getElementById('kiosk-clock');
         function updateClock() {
             const now = new Date();
