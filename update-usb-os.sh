@@ -7,6 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="${SCRIPT_DIR}/config.env"
 [ -f "$CONFIG_FILE" ] && source "$CONFIG_FILE"
 
+LIVE_DIR="${SCRIPT_DIR}/${OUTPUT_DIR:-output}/live"
 ISO_PATH="${SCRIPT_DIR}/${OUTPUT_DIR:-output}/${ISO_NAME:-web-kiosk-live.iso}"
 CONTENT_LABEL="${CONTENT_PART_LABEL:-KIOSKDATA}"
 
@@ -23,6 +24,9 @@ if [ -z "$TARGET_ARG" ]; then
     DATA_PART="$(lsblk -nlo PATH,LABEL | grep -E "[[:space:]]${CONTENT_LABEL}$" | awk '{print $1}' | head -n 1 || true)"
     if [ -z "$DATA_PART" ]; then
         DATA_PART="$(lsblk -nlo PATH,LABEL | grep -E "[[:space:]]${VOLUME_ID:-WEB_KIOSK}$" | awk '{print $1}' | head -n 1 || true)"
+    fi
+    if [ -z "$DATA_PART" ]; then
+        DATA_PART="$(lsblk -nlo PATH,LABEL | grep -E "[[:space:]]KIOSKBOOT$" | awk '{print $1}' | head -n 1 || true)"
     fi
 
     if [ -n "$DATA_PART" ]; then
@@ -61,65 +65,63 @@ if [[ "$TARGET_DEV" == *"/dev/sda"* ]] || [[ "$TARGET_DEV" == *"/dev/nvme0n1"* ]
     exit 1
 fi
 
-# Check if latest ISO exists, or rebuild
-if [ ! -f "$ISO_PATH" ]; then
-    echo "ISO not found at $ISO_PATH. Triggering build..."
-    "${SCRIPT_DIR}/build.sh"
+# Ensure live files are extracted
+if [ ! -f "${LIVE_DIR}/filesystem.squashfs" ]; then
+    if [ -f "$ISO_PATH" ]; then
+        echo "=== Extracting Live Kernel & SquashFS from ISO ==="
+        mkdir -p "$LIVE_DIR"
+        xorriso -osirrox on -indev "$ISO_PATH" -extract /live "$LIVE_DIR"
+    else
+        echo "ERROR: Live build not found. Run sudo ./build.sh first." >&2
+        exit 1
+    fi
 fi
 
 echo "=== Target Device: $TARGET_DEV ==="
-BACKUP_DIR=$(mktemp -d)
-CLEANUP() {
-    umount "$TARGET_DEV"* 2>/dev/null || true
-    rm -rf "$BACKUP_DIR" 2>/dev/null || true
-}
-trap CLEANUP EXIT INT TERM
 
-# Identify and backup existing KIOSKDATA partition
-EXISTING_DATA_PART="$(lsblk -nlo PATH,LABEL "$TARGET_DEV" | grep -E "[[:space:]]${CONTENT_LABEL}$" | awk '{print $1}' | head -n 1 || true)"
-if [ -z "$EXISTING_DATA_PART" ]; then
-    EXISTING_DATA_PART="$(lsblk -nlo PATH "$TARGET_DEV" | tail -n 1 || true)"
-fi
+# Check if drive has native KIOSKBOOT partition
+BOOT_PART="$(lsblk -nlo PATH,LABEL "$TARGET_DEV" | grep -E "[[:space:]]KIOSKBOOT$" | awk '{print $1}' | head -n 1 || true)"
 
-if [ -n "$EXISTING_DATA_PART" ] && [ -b "$EXISTING_DATA_PART" ]; then
-    echo "=== Backing Up Existing User Content ($EXISTING_DATA_PART) ==="
-    MNT_SRC=$(mktemp -d)
-    if mount "$EXISTING_DATA_PART" "$MNT_SRC" 2>/dev/null; then
-        cp -r --no-preserve=ownership,mode "$MNT_SRC/." "$BACKUP_DIR/" 2>/dev/null || true
-        umount "$MNT_SRC"
-    fi
-    rm -rf "$MNT_SRC"
-fi
-
-echo "=== Flashing Updated OS Image to $TARGET_DEV ==="
-umount "${TARGET_DEV}"* 2>/dev/null || true
-dd if="$ISO_PATH" of="$TARGET_DEV" bs=4M status=progress conv=fsync
-
-echo "=== Updating GPT Layout & Recreating $CONTENT_LABEL ==="
-sgdisk -e "$TARGET_DEV" || true
-sgdisk -n 0:0:0 -t 0:0700 -c 0:"$CONTENT_LABEL" "$TARGET_DEV"
-
-partprobe "$TARGET_DEV" || sleep 2
-udevadm settle 2>/dev/null || sleep 2
-
-NEW_DATA_PART="$(lsblk -nlo PATH "$TARGET_DEV" | tail -n 1)"
-echo "Formatting data partition ($NEW_DATA_PART) as FAT32..."
-mkfs.vfat -F 32 -n "$CONTENT_LABEL" "$NEW_DATA_PART"
-
-echo "=== Restoring User Content & Signage Assets ==="
-MNT_DEST=$(mktemp -d)
-mount "$NEW_DATA_PART" "$MNT_DEST"
-
-if [ -f "$BACKUP_DIR/index.html" ]; then
-    echo "Restoring previously saved user files..."
-    cp -r --no-preserve=ownership,mode "$BACKUP_DIR/." "$MNT_DEST/"
+if [ -n "$BOOT_PART" ] && [ -b "$BOOT_PART" ]; then
+    echo "=== Updating OS on Native KIOSKBOOT Partition ($BOOT_PART) ==="
+    MNT_BOOT=$(mktemp -d)
+    mount "$BOOT_PART" "$MNT_BOOT"
+    mkdir -p "$MNT_BOOT/live"
+    cp -r "${LIVE_DIR}/." "$MNT_BOOT/live/"
+    sync
+    umount "$MNT_BOOT"
+    rm -rf "$MNT_BOOT"
+    echo "=== OS Kernel & SquashFS Updated (User Data Untouched) ==="
 else
-    echo "Populating default project content..."
-    cp -r --no-preserve=ownership,mode "${SCRIPT_DIR}/content/." "$MNT_DEST/"
+    echo "=== Drive requires Universal Layout Migration ==="
+    # Backup existing user data if KIOSKDATA exists
+    BACKUP_DIR=$(mktemp -d)
+    EXISTING_DATA="$(lsblk -nlo PATH,LABEL "$TARGET_DEV" | grep -E "[[:space:]]${CONTENT_LABEL}$" | awk '{print $1}' | head -n 1 || true)"
+    if [ -n "$EXISTING_DATA" ] && [ -b "$EXISTING_DATA" ]; then
+        MNT_OLD=$(mktemp -d)
+        if mount "$EXISTING_DATA" "$MNT_OLD" 2>/dev/null; then
+            cp -r --no-preserve=ownership,mode "$MNT_OLD/." "$BACKUP_DIR/" 2>/dev/null || true
+            umount "$MNT_OLD"
+        fi
+        rm -rf "$MNT_OLD"
+    fi
+
+    # Run make-usb.sh with universal layout
+    "${SCRIPT_DIR}/make-usb.sh" -y "$TARGET_DEV"
+
+    # Restore backed up user files if any
+    if [ -f "$BACKUP_DIR/index.html" ]; then
+        DATA_PART="$(lsblk -nlo PATH,LABEL "$TARGET_DEV" | grep -E "[[:space:]]${CONTENT_LABEL}$" | awk '{print $1}' | head -n 1 || true)"
+        if [ -n "$DATA_PART" ]; then
+            MNT_NEW=$(mktemp -d)
+            mount "$DATA_PART" "$MNT_NEW"
+            cp -r --no-preserve=ownership,mode "$BACKUP_DIR/." "$MNT_NEW/"
+            sync
+            umount "$MNT_NEW"
+            rm -rf "$MNT_NEW"
+        fi
+    fi
+    rm -rf "$BACKUP_DIR"
 fi
 
-sync
-umount "$MNT_DEST"
-rm -rf "$MNT_DEST"
-
-echo "=== USB Kiosk OS Successfully Updated ==="
+echo "=== Success: USB Kiosk OS is fully updated and boot-ready ==="

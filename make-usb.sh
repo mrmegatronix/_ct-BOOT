@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
-# Prepare Dual-Partition USB Drive:
-# Partition 1: Live OS Image
-# Partition 2: FAT32 (Label: KIOSKDATA) for drag-and-drop web files
+# Universal USB Flasher:
+# Partition 1: FAT32 (Label: KIOSKBOOT) with standard /EFI/BOOT/BOOTX64.EFI + MBR (i386-pc)
+# Partition 2: FAT32 (Label: KIOSKDATA) for drag-and-drop web files & user signage
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="${SCRIPT_DIR}/config.env"
 [ -f "$CONFIG_FILE" ] && source "$CONFIG_FILE"
 
+LIVE_DIR="${SCRIPT_DIR}/${OUTPUT_DIR:-output}/live"
 ISO_PATH="${SCRIPT_DIR}/${OUTPUT_DIR:-output}/${ISO_NAME:-web-kiosk-live.iso}"
+CONTENT_LABEL="${CONTENT_PART_LABEL:-KIOSKDATA}"
 
 AUTO_CONFIRM=0
 TARGET_ARG=""
@@ -29,7 +31,7 @@ fi
 
 TARGET_DEV="$TARGET_ARG"
 
-# Auto-resolve partition (e.g., /dev/sdd1) to parent disk (e.g., /dev/sdd)
+# Auto-resolve partition (e.g. /dev/sdd1) to parent disk (e.g. /dev/sdd)
 if [ -b "$TARGET_DEV" ]; then
     DEV_TYPE="$(lsblk -no TYPE "$TARGET_DEV" 2>/dev/null | head -n 1 | tr -d '[:space:]')"
     if [ "$DEV_TYPE" == "part" ]; then
@@ -42,7 +44,7 @@ if [ -b "$TARGET_DEV" ]; then
 fi
 
 if [ "$EUID" -ne 0 ]; then
-    echo "ERROR: Must be run as root." >&2
+    echo "ERROR: Must be run as root (sudo $0)." >&2
     exit 1
 fi
 
@@ -56,13 +58,23 @@ if [[ "$TARGET_DEV" == *"/dev/sda"* ]] || [[ "$TARGET_DEV" == *"/dev/nvme0n1"* ]
     exit 1
 fi
 
-if [ ! -f "$ISO_PATH" ]; then
-    echo "ERROR: Live ISO not found at $ISO_PATH. Run sudo ./build.sh first." >&2
-    exit 1
+# Ensure live files are extracted and available
+if [ ! -f "${LIVE_DIR}/filesystem.squashfs" ]; then
+    if [ -f "$ISO_PATH" ]; then
+        echo "=== Extracting Live Kernel & SquashFS from ISO ==="
+        mkdir -p "$LIVE_DIR"
+        xorriso -osirrox on -indev "$ISO_PATH" -extract /live "$LIVE_DIR"
+    else
+        echo "ERROR: Neither $LIVE_DIR nor $ISO_PATH found. Run sudo ./build.sh first." >&2
+        exit 1
+    fi
 fi
 
-echo "WARNING: ALL DATA ON $TARGET_DEV WILL BE DESTROYED!"
-echo "Target: $TARGET_DEV"
+echo "=========================================================="
+echo "UNIVERSAL DUAL-BOOT USB BUILDER (UEFI + LEGACY BIOS)"
+echo "Target Drive: $TARGET_DEV"
+echo "WARNING: ALL DATA ON $TARGET_DEV WILL BE PERMANENTLY ERASED!"
+echo "=========================================================="
 
 if [ "$AUTO_CONFIRM" -ne 1 ]; then
     read -p "Type 'YES' to proceed: " CONFIRM
@@ -72,42 +84,121 @@ if [ "$AUTO_CONFIRM" -ne 1 ]; then
     fi
 fi
 
-echo "=== Unmounting Existing Partitions ==="
+echo "=== 1. Unmounting and Wiping $TARGET_DEV ==="
 umount "${TARGET_DEV}"* 2>/dev/null || true
-
-echo "=== Wiping Partition Table ==="
 wipefs -a "$TARGET_DEV"
 
-echo "=== Writing Hybrid ISO to $TARGET_DEV ==="
-dd if="$ISO_PATH" of="$TARGET_DEV" bs=4M status=progress conv=fsync
-
-echo "=== Expanding GPT Table to Full Disk ==="
-sgdisk -e "$TARGET_DEV" || true
-
-echo "=== Creating KIOSKDATA User Partition ==="
-# Allocate remaining unallocated sectors to a new Microsoft basic data partition
-sgdisk -n 0:0:0 -t 0:0700 -c 0:"$CONTENT_PART_LABEL" "$TARGET_DEV"
+echo "=== 2. Partitioning MBR Layout ==="
+# Partition 1: 3000MB FAT32 with active boot flag (for UEFI ESP & BIOS boot)
+# Partition 2: Remaining disk space FAT32 (for KIOSKDATA user signage)
+parted --script "$TARGET_DEV" -- \
+    mklabel msdos \
+    mkpart primary fat32 1MiB 3000MiB \
+    set 1 boot on \
+    mkpart primary fat32 3000MiB 100%
 
 partprobe "$TARGET_DEV" || sleep 2
 udevadm settle 2>/dev/null || sleep 2
 
-# Identify the newly created partition
-DATA_PART="$(lsblk -nlo PATH "$TARGET_DEV" | tail -n 1)"
-echo "Formatting data partition ($DATA_PART) as FAT32..."
-mkfs.vfat -F 32 -n "$CONTENT_PART_LABEL" "$DATA_PART"
+# Identify partition device nodes
+if [[ "$TARGET_DEV" =~ [0-9]$ ]]; then
+    BOOT_PART="${TARGET_DEV}p1"
+    DATA_PART="${TARGET_DEV}p2"
+else
+    BOOT_PART="${TARGET_DEV}1"
+    DATA_PART="${TARGET_DEV}2"
+fi
 
-echo "=== Populating Default Content on KIOSKDATA Partition ==="
-MNT_DIR=$(mktemp -d)
-mount "$DATA_PART" "$MNT_DIR"
-cp -r --no-preserve=ownership,mode "${SCRIPT_DIR}/content/." "$MNT_DIR/"
-cat << 'EOF' > "$MNT_DIR/kiosk.conf"
+echo "=== 3. Formatting Partitions as Native FAT32 ==="
+echo "Formatting Boot/OS Partition: $BOOT_PART (Label: KIOSKBOOT)"
+mkfs.vfat -F 32 -n "KIOSKBOOT" "$BOOT_PART"
+
+echo "Formatting Data Partition: $DATA_PART (Label: $CONTENT_LABEL)"
+mkfs.vfat -F 32 -n "$CONTENT_LABEL" "$DATA_PART"
+
+echo "=== 4. Installing Universal Bootloaders to $BOOT_PART ==="
+MNT_BOOT=$(mktemp -d)
+mount "$BOOT_PART" "$MNT_BOOT"
+
+mkdir -p "$MNT_BOOT/live"
+mkdir -p "$MNT_BOOT/boot/grub"
+mkdir -p "$MNT_BOOT/EFI/BOOT"
+
+# Install UEFI 64-bit bootloader (/EFI/BOOT/BOOTX64.EFI)
+echo "Installing UEFI 64-bit bootloader..."
+grub-install \
+    --target=x86_64-efi \
+    --efi-directory="$MNT_BOOT" \
+    --boot-directory="$MNT_BOOT/boot" \
+    --bootloader-id=BOOT \
+    --removable \
+    --no-nvram
+
+# Install Legacy BIOS MBR bootloader
+echo "Installing Legacy BIOS MBR bootloader..."
+grub-install \
+    --target=i386-pc \
+    --boot-directory="$MNT_BOOT/boot" \
+    "$TARGET_DEV"
+
+echo "Writing Universal GRUB Configuration..."
+cat << 'EOF' > "$MNT_BOOT/boot/grub/grub.cfg"
+set default="0"
+set timeout=1
+
+# Locate boot partition by filesystem label
+search --no-floppy --set=root --label KIOSKBOOT
+
+menuentry "Autonomous Web Kiosk (Live RAM)" {
+    linux /live/vmlinuz boot=live quiet splash components console=tty1
+    initrd /live/initrd.img
+}
+
+menuentry "Autonomous Web Kiosk (Failsafe)" {
+    linux /live/vmlinuz boot=live components memtest noapic noapm nodma nomce nolapic nomodeset nosmp nosplash vga=normal
+    initrd /live/initrd.img
+}
+EOF
+
+echo "Copying Kernel, Initramfs, and SquashFS to KIOSKBOOT..."
+cp -r "${LIVE_DIR}/." "$MNT_BOOT/live/"
+sync
+umount "$MNT_BOOT"
+rm -rf "$MNT_BOOT"
+
+echo "=== 5. Populating Signage Content on $DATA_PART ==="
+partprobe "$TARGET_DEV" 2>/dev/null || sleep 2
+udevadm settle 2>/dev/null || sleep 2
+
+if [[ "$TARGET_DEV" =~ [0-9]$ ]]; then
+    DATA_PART="${TARGET_DEV}p2"
+else
+    DATA_PART="${TARGET_DEV}2"
+fi
+
+# Wait up to 5s for device node if needed
+for i in {1..5}; do
+    [ -b "$DATA_PART" ] && break
+    sleep 1
+done
+
+MNT_DATA=$(mktemp -d)
+mount "$DATA_PART" "$MNT_DATA"
+cp -r --no-preserve=ownership,mode "${SCRIPT_DIR}/content/." "$MNT_DATA/"
+
+cat << 'EOF' > "$MNT_DATA/kiosk.conf"
 # Kiosk Configuration
 # Override target URL below if you want remote signage:
 # TARGET_URL="https://example.com/signage"
 EOF
-sync
-umount "$MNT_DIR"
-rm -rf "$MNT_DIR"
 
-echo "=== Success ==="
-echo "USB Drive $TARGET_DEV is ready to boot!"
+sync
+umount "$MNT_DATA"
+rm -rf "$MNT_DATA"
+
+echo "=========================================================="
+echo "SUCCESS: Universal USB Kiosk Drive is Ready!"
+echo "Boot Modes Supported:"
+echo "  ✓ UEFI 64-bit Native (/EFI/BOOT/BOOTX64.EFI on FAT32 ESP)"
+echo "  ✓ Legacy BIOS / CSM (MBR Stage 1 & Stage 2)"
+echo "=========================================================="
