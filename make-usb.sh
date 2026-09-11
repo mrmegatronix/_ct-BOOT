@@ -84,29 +84,38 @@ if [ "$AUTO_CONFIRM" -ne 1 ]; then
     fi
 fi
 
-echo "=== 1. Unmounting and Wiping $TARGET_DEV ==="
+echo "=== 1. Deep Wiping Drive Signatures & Backup GPT Headers ==="
 umount "${TARGET_DEV}"* 2>/dev/null || true
-wipefs -a "$TARGET_DEV"
+sgdisk --zap-all "$TARGET_DEV" 2>/dev/null || true
+wipefs -a "$TARGET_DEV" 2>/dev/null || true
+TOTAL_SECTORS=$(blockdev --getsz "$TARGET_DEV" 2>/dev/null || echo 0)
+dd if=/dev/zero of="$TARGET_DEV" bs=1M count=10 status=none || true
+if [ "$TOTAL_SECTORS" -gt 20480 ]; then
+    dd if=/dev/zero of="$TARGET_DEV" bs=512 seek=$((TOTAL_SECTORS - 20480)) count=20480 status=none || true
+fi
 
-echo "=== 2. Partitioning MBR Layout ==="
-# Partition 1: 3000MB FAT32 with active boot flag (for UEFI ESP & BIOS boot)
-# Partition 2: Remaining disk space FAT32 (for KIOSKDATA user signage)
+echo "=== 2. Partitioning Universal GPT Layout (Dual UEFI + BIOS) ==="
+# Partition 1: 2MB BIOS Boot Partition (for Legacy BIOS MBR via GRUB i386-pc)
+# Partition 2: 3000MB FAT32 EFI System Partition (Label: KIOSKBOOT, flag: esp)
+# Partition 3: Remaining disk space FAT32 (Label: KIOSKDATA for user signage)
 parted --script "$TARGET_DEV" -- \
-    mklabel msdos \
-    mkpart primary fat32 1MiB 3000MiB \
-    set 1 boot on \
-    mkpart primary fat32 3000MiB 100%
+    mklabel gpt \
+    mkpart "BIOS_BOOT" 1MiB 3MiB \
+    set 1 bios_grub on \
+    mkpart "KIOSKBOOT" fat32 3MiB 3000MiB \
+    set 2 esp on \
+    mkpart "$CONTENT_LABEL" fat32 3000MiB 100%
 
 partprobe "$TARGET_DEV" || sleep 2
 udevadm settle 2>/dev/null || sleep 2
 
 # Identify partition device nodes
 if [[ "$TARGET_DEV" =~ [0-9]$ ]]; then
-    BOOT_PART="${TARGET_DEV}p1"
-    DATA_PART="${TARGET_DEV}p2"
+    BOOT_PART="${TARGET_DEV}p2"
+    DATA_PART="${TARGET_DEV}p3"
 else
-    BOOT_PART="${TARGET_DEV}1"
-    DATA_PART="${TARGET_DEV}2"
+    BOOT_PART="${TARGET_DEV}2"
+    DATA_PART="${TARGET_DEV}3"
 fi
 
 echo "=== 3. Formatting Partitions as Native FAT32 ==="
@@ -116,13 +125,20 @@ mkfs.vfat -F 32 -n "KIOSKBOOT" "$BOOT_PART"
 echo "Formatting Data Partition: $DATA_PART (Label: $CONTENT_LABEL)"
 mkfs.vfat -F 32 -n "$CONTENT_LABEL" "$DATA_PART"
 
-echo "=== 4. Installing Universal Bootloaders to $BOOT_PART ==="
+echo "=== 4. Installing Universal Bootloaders to $TARGET_DEV ==="
 MNT_BOOT=$(mktemp -d)
 mount "$BOOT_PART" "$MNT_BOOT"
 
 mkdir -p "$MNT_BOOT/live"
 mkdir -p "$MNT_BOOT/boot/grub"
 mkdir -p "$MNT_BOOT/EFI/BOOT"
+
+# Install Legacy BIOS MBR bootloader (embeds into Partition 1 bios_grub)
+echo "Installing Legacy BIOS MBR bootloader..."
+grub-install \
+    --target=i386-pc \
+    --boot-directory="$MNT_BOOT/boot" \
+    "$TARGET_DEV"
 
 # Install UEFI 64-bit bootloader (/EFI/BOOT/BOOTX64.EFI)
 echo "Installing UEFI 64-bit bootloader..."
@@ -134,17 +150,10 @@ grub-install \
     --removable \
     --no-nvram
 
-# Install Legacy BIOS MBR bootloader
-echo "Installing Legacy BIOS MBR bootloader..."
-grub-install \
-    --target=i386-pc \
-    --boot-directory="$MNT_BOOT/boot" \
-    "$TARGET_DEV"
-
 echo "Writing Universal GRUB Configuration..."
 cat << 'EOF' > "$MNT_BOOT/boot/grub/grub.cfg"
 set default="0"
-set timeout=1
+set timeout=3
 
 # Locate boot partition by filesystem label
 search --no-floppy --set=root --label KIOSKBOOT
@@ -154,7 +163,12 @@ menuentry "Autonomous Web Kiosk (Live RAM)" {
     initrd /live/initrd.img
 }
 
-menuentry "Autonomous Web Kiosk (Failsafe)" {
+menuentry "Autonomous Web Kiosk (Nomodeset / Fallback Video)" {
+    linux /live/vmlinuz boot=live quiet splash components console=tty1 nomodeset
+    initrd /live/initrd.img
+}
+
+menuentry "Autonomous Web Kiosk (Failsafe Mode)" {
     linux /live/vmlinuz boot=live components memtest noapic noapm nodma nomce nolapic nomodeset nosmp nosplash vga=normal
     initrd /live/initrd.img
 }
@@ -171,9 +185,9 @@ partprobe "$TARGET_DEV" 2>/dev/null || sleep 2
 udevadm settle 2>/dev/null || sleep 2
 
 if [[ "$TARGET_DEV" =~ [0-9]$ ]]; then
-    DATA_PART="${TARGET_DEV}p2"
+    DATA_PART="${TARGET_DEV}p3"
 else
-    DATA_PART="${TARGET_DEV}2"
+    DATA_PART="${TARGET_DEV}3"
 fi
 
 # Wait up to 5s for device node if needed

@@ -88,10 +88,28 @@ if [ -n "$BOOT_PART" ] && [ -b "$BOOT_PART" ]; then
     mount "$BOOT_PART" "$MNT_BOOT"
     mkdir -p "$MNT_BOOT/live"
     cp -r "${LIVE_DIR}/." "$MNT_BOOT/live/"
+    mkdir -p "$MNT_BOOT/boot/grub"
+    cat << 'EOF' > "$MNT_BOOT/boot/grub/grub.cfg"
+set default="0"
+set timeout=1
+
+# Locate boot partition by filesystem label
+search --no-floppy --set=root --label KIOSKBOOT
+
+menuentry "Autonomous Web Kiosk (Live RAM)" {
+    linux /live/vmlinuz boot=live quiet splash components console=tty1 nomodeset
+    initrd /live/initrd.img
+}
+
+menuentry "Autonomous Web Kiosk (Failsafe)" {
+    linux /live/vmlinuz boot=live components memtest noapic noapm nodma nomce nolapic nomodeset nosmp nosplash vga=normal
+    initrd /live/initrd.img
+}
+EOF
     sync
     umount "$MNT_BOOT"
     rm -rf "$MNT_BOOT"
-    echo "=== OS Kernel & SquashFS Updated (User Data Untouched) ==="
+    echo "=== OS Kernel, SquashFS, and GRUB Configuration Updated (User Data Untouched) ==="
 else
     echo "=== Drive requires Universal Layout Migration ==="
     # Backup existing user data if KIOSKDATA exists

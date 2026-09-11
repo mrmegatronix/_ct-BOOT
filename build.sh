@@ -167,7 +167,7 @@ set default="0"
 set timeout=1
 
 menuentry "Autonomous Web Kiosk (Live RAM)" {
-    linux /live/vmlinuz boot=live quiet splash components console=tty1
+    linux /live/vmlinuz boot=live quiet splash components console=tty1 nomodeset
     initrd /live/initrd.img
 }
 
