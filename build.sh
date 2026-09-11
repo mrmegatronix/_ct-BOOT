@@ -164,14 +164,27 @@ build_iso() {
     mkdir -p "${ISO_DIR}/boot/grub"
     cat << EOF > "${ISO_DIR}/boot/grub/grub.cfg"
 set default="0"
-set timeout=1
+set timeout=3
 
-menuentry "Autonomous Web Kiosk (Live RAM)" {
-    linux /live/vmlinuz boot=live quiet splash components console=tty1 nomodeset
+insmod efi_gop
+insmod efi_uga
+insmod all_video
+insmod gfxterm
+
+set gfxmode=1920x1080,1920x1080x32,1600x900,1366x768,1280x720,auto
+set gfxpayload=keep
+
+menuentry "Autonomous Web Kiosk (Live RAM - 1080p)" {
+    linux /live/vmlinuz boot=live quiet splash components console=tty1 video=1920x1080
     initrd /live/initrd.img
 }
 
-menuentry "Autonomous Web Kiosk (Failsafe)" {
+menuentry "Autonomous Web Kiosk (Nomodeset / Fallback Video - 1080p)" {
+    linux /live/vmlinuz boot=live quiet splash components console=tty1 nomodeset video=1920x1080-32@60 video=efifb:1920x1080
+    initrd /live/initrd.img
+}
+
+menuentry "Autonomous Web Kiosk (Failsafe Mode)" {
     linux /live/vmlinuz boot=live components memtest noapic noapm nodma nomce nolapic nomodeset nosmp nosplash vga=normal
     initrd /live/initrd.img
 }

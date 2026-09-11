@@ -7,6 +7,9 @@ xset -dpms || true
 xset s off || true
 xset s noblank || true
 
+# Attempt to enforce 1080p display mode
+xrandr -s 1920x1080 2>/dev/null || true
+
 # Hide cursor when idle (timeout 1s)
 unclutter -idle 1 -root &
 
@@ -38,6 +41,9 @@ rm -rf /home/kiosk/.config/chromium/Singleton* /home/kiosk/.config/chromium/Defa
 while true; do
     chromium \
         --kiosk \
+        --window-size=1920,1080 \
+        --start-fullscreen \
+        --force-device-scale-factor=1 \
         --noerrdialogs \
         --disable-infobars \
         --no-first-run \

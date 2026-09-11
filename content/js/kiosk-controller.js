@@ -40,6 +40,7 @@ class KioskController {
     }
 
     init() {
+        this.initAutoScaling();
         this.loadConfiguredUrlSlides();
         this.initClock();
         this.bindKeyboardShortcuts();
@@ -306,6 +307,20 @@ class KioskController {
                 this.nextSlide();
             }
         }, tickInterval);
+    }
+
+    initAutoScaling() {
+        const applyScale = () => {
+            const currentW = window.innerWidth;
+            if (currentW > 0 && currentW < 1920) {
+                const scale = currentW / 1920;
+                document.documentElement.style.zoom = scale;
+            } else {
+                document.documentElement.style.zoom = '1';
+            }
+        };
+        applyScale();
+        window.addEventListener('resize', applyScale);
     }
 
     stopTimer() {
