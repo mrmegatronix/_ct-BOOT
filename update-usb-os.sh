@@ -98,13 +98,12 @@ insmod efi_uga
 insmod all_video
 insmod gfxterm
 
-set gfxmode=1920x1080,auto
-set gfxpayload=keep
+set gfxmode=auto
 
 # Locate boot partition by filesystem label
 search --no-floppy --set=root --label KIOSKBOOT
 
-menuentry "Autonomous Web Kiosk (Live RAM)" {
+menuentry "Autonomous Web Kiosk (Live RAM - Native KMS 1080p)" {
     linux /live/vmlinuz boot=live quiet splash components console=tty1
     initrd /live/initrd.img
 }
