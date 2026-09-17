@@ -202,7 +202,12 @@ class KioskHandler(http.server.SimpleHTTPRequestHandler):
             if mode == "auto":
                 run_cmd(f"{env_display} xrandr --auto")
             else:
-                run_cmd(f"{env_display} xrandr -s {mode}")
+                ok, out = run_cmd(f"{env_display} xrandr -q | grep ' connected' | head -n 1 | awk '{{print $1}}'")
+                primary = out if ok and out else ""
+                if primary:
+                    run_cmd(f"{env_display} xrandr --output {primary} --mode {mode}")
+                else:
+                    run_cmd(f"{env_display} xrandr -s {mode}")
             response_data["message"] = f"Resolution switched to {mode}"
         elif path == "/api/system/volume":
             action = post_json.get("action") or params.get("action", ["toggle"])[0]

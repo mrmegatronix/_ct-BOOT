@@ -7,17 +7,37 @@ xset -dpms || true
 xset s off || true
 xset s noblank || true
 
-# Attempt to enforce native display resolution
-xrandr --auto 2>/dev/null || xrandr -s 1920x1080 2>/dev/null || true
-
-# Hide cursor when idle (timeout 1s)
-unclutter -idle 1 -root &
-
 # Mount KIOSKDATA partition if available
 CONTENT_DIR="/opt/kiosk/content"
 if [ -d "/mnt/kiosk-data" ] && [ -f "/mnt/kiosk-data/index.html" ]; then
     CONTENT_DIR="/mnt/kiosk-data"
 fi
+
+# Load custom kiosk configuration (display/URL overrides)
+TARGET_URL="http://127.0.0.1:8080/index.html"
+if [ -f "$CONTENT_DIR/kiosk.conf" ]; then
+    source "$CONTENT_DIR/kiosk.conf" 2>/dev/null || true
+fi
+
+# Attempt to enforce native display resolution
+if command -v xrandr >/dev/null 2>&1; then
+    PRIMARY=$(xrandr -q 2>/dev/null | grep " connected" | head -n 1 | awk '{print $1}')
+    if [ -n "$PRIMARY" ]; then
+        xrandr --output "$PRIMARY" --mode 1920x1080 --rate 60 2>/dev/null || \
+        xrandr --output "$PRIMARY" --mode 1920x1080 2>/dev/null || \
+        xrandr --auto 2>/dev/null || true
+    else
+        xrandr --auto 2>/dev/null || xrandr -s 1920x1080 2>/dev/null || true
+    fi
+fi
+
+# Start matchbox-window-manager to enforce exact 1080p root window containment
+if command -v matchbox-window-manager >/dev/null 2>&1; then
+    matchbox-window-manager -use_titlebar no -use_cursor no &
+fi
+
+# Hide cursor when idle (timeout 1s)
+unclutter -idle 1 -root &
 
 # Start local kiosk API & HTTP server
 export CONTENT_DIR
@@ -28,12 +48,6 @@ SERVER_PID=$!
 # Cleanup on exit
 trap "kill -9 $SERVER_PID 2>/dev/null || true" EXIT
 
-TARGET_URL="http://127.0.0.1:8080/index.html"
-if [ -f "$CONTENT_DIR/kiosk.conf" ]; then
-    # Load custom URL if defined
-    source "$CONTENT_DIR/kiosk.conf" 2>/dev/null || true
-fi
-
 # Ensure clean Chromium state on volatile tmpfs
 rm -rf /home/kiosk/.config/chromium/Singleton* /home/kiosk/.config/chromium/Default/Preferences.bad || true
 
@@ -41,6 +55,8 @@ rm -rf /home/kiosk/.config/chromium/Singleton* /home/kiosk/.config/chromium/Defa
 while true; do
     chromium \
         --kiosk \
+        --window-size=1920,1080 \
+        --window-position=0,0 \
         --start-maximized \
         --noerrdialogs \
         --disable-infobars \

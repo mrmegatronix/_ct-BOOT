@@ -112,6 +112,10 @@ EOF
         xorg \
         xinit \
         x11-xserver-utils \
+        xserver-xorg-video-all \
+        firmware-misc-nonfree \
+        firmware-amd-graphics \
+        matchbox-window-manager \
         unclutter \
         chromium \
         python3 \
