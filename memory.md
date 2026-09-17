@@ -33,11 +33,13 @@
 - Fast, low-latency DOM updates and resilient error recovery.
 
 ## 4. Active Context & Operational State
-- **Status**: Maintained
-- **Last Sync**: 2026-09-11
-- **Target Deployment**: Local Environment / Signage Display / Kiosk
+- **Status**: Active & Maintained
+- **Last Sync**: 2026-09-18
+- **Target Deployment**: Local Environment / Signage Display / Kiosk / Raspberry Pi 3, 4, 5
 
 ## 5. Episodic Memory & Change Log
+- **2026-09-18**: Added native OS functions (WiFi manager, diagnostics shell, resolution switcher, GRUB power controls) and full Raspberry Pi compatibility (`config.txt`, `cmdline.txt`, `RPI-Run-Kiosk.sh`, `RPI-Setup-Autostart.sh`).
+- **2026-09-12**: Resolved universal GPT partition layout, fixed secondary GPT overlap hang, eliminated viewport zoom reduction bugs.
 - **2026-09-11**: Initialized persistent `memory.md` bank across repository root.
 
 ## 6. Agent References
