@@ -131,10 +131,33 @@ menuentry "UEFI Firmware Settings (BIOS)" {
     fwsetup
 }
 EOF
+    cat << 'EOF' > "$MNT_BOOT/config.txt"
+# Raspberry Pi Universal HDMI & Firmware Configuration
+[all]
+hdmi_force_hotplug=1
+hdmi_group=1
+hdmi_mode=16
+disable_overscan=1
+framebuffer_width=1920
+framebuffer_height=1080
+dtoverlay=vc4-kms-v3d
+max_framebuffers=2
+arm_64bit=1
+enable_uart=1
+
+[pi4]
+arm_boost=1
+
+[pi5]
+display_auto_detect=1
+EOF
+    cat << 'EOF' > "$MNT_BOOT/cmdline.txt"
+console=serial0,115200 console=tty1 root=/dev/ram0 boot=live quiet splash
+EOF
     sync
     umount "$MNT_BOOT"
     rm -rf "$MNT_BOOT"
-    echo "=== OS Kernel, SquashFS, and GRUB Configuration Updated (User Data Untouched) ==="
+    echo "=== OS Kernel, SquashFS, GRUB, and Raspberry Pi Configurations Updated ==="
 else
     echo "=== Drive requires Universal Layout Migration ==="
     # Backup existing user data if KIOSKDATA exists
