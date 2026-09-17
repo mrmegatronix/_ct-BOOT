@@ -180,6 +180,18 @@ menuentry "Autonomous Web Kiosk (Failsafe Mode)" {
     linux /live/vmlinuz boot=live components memtest noapic noapm nodma nomce nolapic nomodeset nosmp nosplash vga=normal
     initrd /live/initrd.img
 }
+
+menuentry "Reboot System" {
+    reboot
+}
+
+menuentry "Shutdown System" {
+    halt
+}
+
+menuentry "UEFI Firmware Settings (BIOS)" {
+    fwsetup
+}
 EOF
 
 echo "Copying Kernel, Initramfs, and SquashFS to KIOSKBOOT..."

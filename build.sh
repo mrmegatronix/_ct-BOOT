@@ -116,7 +116,18 @@ EOF
         chromium \
         python3 \
         ca-certificates \
-        firmware-linux-free
+        firmware-linux-free \
+        alsa-utils \
+        network-manager \
+        xterm \
+        htop \
+        pciutils \
+        usbutils \
+        iproute2 \
+        net-tools \
+        curl \
+        wget \
+        nano
 
     echo "=== Creating Kiosk User ==="
     chroot "$CHROOT_DIR" useradd -m -s /bin/bash -G audio,video,input "$KIOSK_USER" || true
@@ -187,6 +198,18 @@ menuentry "Autonomous Web Kiosk (Safe Graphics / Nomodeset)" {
 menuentry "Autonomous Web Kiosk (Failsafe Mode)" {
     linux /live/vmlinuz boot=live components memtest noapic noapm nodma nomce nolapic nomodeset nosmp nosplash vga=normal
     initrd /live/initrd.img
+}
+
+menuentry "Reboot System" {
+    reboot
+}
+
+menuentry "Shutdown System" {
+    halt
+}
+
+menuentry "UEFI Firmware Settings (BIOS)" {
+    fwsetup
 }
 EOF
 

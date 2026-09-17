@@ -92,6 +92,18 @@
             <span>&#128266; MUTE AUDIO</span>
             <span class="sub">Volume Toggle</span>
         </button>
+        <button class="remote-btn" onclick="postApi('/api/system/rotate?dir=normal')">
+            <span>&#8634; LANDSCAPE</span>
+            <span class="sub">Rotate Display 0°</span>
+        </button>
+        <button class="remote-btn" onclick="postApi('/api/system/rotate?dir=right')">
+            <span>&#8635; PORTRAIT</span>
+            <span class="sub">Rotate Display 90°</span>
+        </button>
+        <button class="remote-btn" style="border-color:#059669;" onclick="postApi('/api/system/terminal')">
+            <span>&#62;_ LAUNCH TERMINAL</span>
+            <span class="sub">Open Xterm On Screen</span>
+        </button>
         <button class="remote-btn" style="border-color:#d97706;" onclick="if(confirm('Reboot computer?')) postApi('/api/system/reboot')">
             <span>&#9888; REBOOT SYSTEM</span>
             <span class="sub">Restart Host PC</span>

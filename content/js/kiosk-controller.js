@@ -171,6 +171,11 @@ class KioskController {
                     e.preventDefault();
                     this.toggleLock();
                     break;
+                case 't':
+                case 'T':
+                    e.preventDefault();
+                    fetch('/api/system/terminal', { method: 'POST' }).catch(() => {});
+                    break;
                 default:
                     // Numeric keys 1-9
                     if (/^[1-9]$/.test(e.key)) {

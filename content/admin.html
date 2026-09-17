@@ -2,18 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=1920, height=1080, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kiosk Admin Dashboard</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
+        body {
+            overflow-y: auto !important;
+            height: auto !important;
+            min-height: 100vh;
+        }
         .admin-container {
             width: 100%;
-            max-width: 1200px;
-            margin: 40px auto;
+            max-width: 1280px;
+            margin: 30px auto;
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 16px;
-            padding: 40px;
+            padding: 36px;
             display: flex;
             flex-direction: column;
             gap: 24px;
@@ -24,7 +29,7 @@
             gap: 8px;
         }
         .form-row label {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             color: var(--accent-blue);
             white-space: nowrap;
@@ -33,8 +38,8 @@
             background: #0f172a;
             border: 1px solid var(--border-color);
             color: #ffffff;
-            font-size: 18px;
-            padding: 12px 16px;
+            font-size: 16px;
+            padding: 10px 14px;
             border-radius: 8px;
             outline: none;
             width: 100%;
@@ -44,36 +49,94 @@
         }
         .btn-group {
             display: flex;
-            gap: 16px;
-            margin-top: 16px;
+            gap: 12px;
+            flex-wrap: wrap;
         }
         .btn {
             background: var(--accent-blue);
             color: #0b0f19;
             font-weight: 700;
-            font-size: 16px;
-            padding: 12px 24px;
+            font-size: 15px;
+            padding: 10px 20px;
             border-radius: 8px;
             border: none;
             cursor: pointer;
             white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .btn:hover {
+            filter: brightness(1.15);
+        }
+        .section-header {
+            color: var(--accent-blue);
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .os-card {
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .telemetry-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            font-size: 14px;
+        }
+        .telemetry-item {
+            background: #1e293b;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .terminal-box {
+            background: #050811;
+            border: 1px solid #1f293d;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 13px;
+            color: #38bdf8;
+            height: 180px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
         }
     </style>
 </head>
 <body>
     <header class="kiosk-header">
-        <div class="kiosk-title">ADMIN CONTROL CENTER</div>
+        <div class="kiosk-title">SYSTEM CONTROL &amp; OS DASHBOARD</div>
         <div class="kiosk-clock" id="kiosk-clock">00<span class="colon-blink">:</span>00<span class="colon-blink">:</span>00</div>
-        <div class="status-badge live">AUTHENTICATED</div>
+        <div class="status-badge live" id="os-badge">OS LIVE</div>
     </header>
 
     <div class="admin-container">
+        <!-- 1. Signage & Slideshow Settings -->
+        <div class="section-header">
+            <span>&#9881; PRESENTATION &amp; SLIDESHOW SETTINGS</span>
+        </div>
         <div class="form-row">
-            <label for="kiosk-url">Target Display URL / Path</label>
+            <label for="kiosk-url">Primary Display URL</label>
             <input type="text" id="kiosk-url" value="http://localhost:8080/index.html">
         </div>
         <div class="form-row">
-            <label for="default-duration">Default Slide Duration</label>
+            <label for="default-duration">Slide Duration</label>
             <select id="default-duration">
                 <option value="0">No Time Limit (Manual Advance Only)</option>
                 <option value="10" selected>10 Seconds</option>
@@ -85,38 +148,108 @@
         </div>
         <div class="form-row">
             <label for="slide-urls">Slide URLs / Web Pages (One per line)</label>
-            <textarea id="slide-urls" rows="6" placeholder="weather.html&#10;https://your-dashboard.com&#10;https://news.example.com"></textarea>
-            <small style="color:var(--text-muted);font-size:14px;margin-top:4px;">
-                Enter URLs to display as rotating slides (e.g. <code>weather.html</code>, <code>https://...</code>). Leave empty to display built-in default modules.
+            <textarea id="slide-urls" rows="4" placeholder="weather.html&#10;https://your-dashboard.com&#10;https://news.example.com"></textarea>
+            <small style="color:var(--text-muted);font-size:13px;">
+                Enter URLs to display as rotating slides (e.g. <code>weather.html</code>, <code>https://...</code>). Leave empty for default modules.
             </small>
         </div>
-        <div class="form-row">
-            <label for="custom-css">Custom CSS Injections</label>
-            <textarea id="custom-css" rows="3" placeholder="/* Custom styling overrides */"></textarea>
-        </div>
         <div class="btn-group">
-            <button class="btn" onclick="saveSettings()">Save Changes</button>
+            <button class="btn" onclick="saveSettings()">&#10003; Save Presentation Settings</button>
             <button class="btn" style="background:#334155;color:#fff;" onclick="window.close()">Close Admin</button>
         </div>
 
-        <hr style="border:none;border-top:1px solid var(--border-color);margin:24px 0 16px 0;">
+        <hr style="border:none;border-top:1px solid var(--border-color);margin:12px 0;">
 
-        <!-- Computer & Hardware Control Section -->
-        <h3 style="color:var(--accent-blue);font-size:22px;">COMPUTER &amp; HARDWARE CONTROLS</h3>
-        <div id="telemetry-bar" style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px;background:#0f172a;padding:16px;border-radius:8px;border:1px solid var(--border-color);font-size:15px;">
-            <div><strong>Host:</strong> <span id="stat-host">Loading...</span></div>
-            <div><strong>IP Address:</strong> <span id="stat-ip">Loading...</span></div>
-            <div><strong>Uptime:</strong> <span id="stat-uptime">Loading...</span></div>
-            <div><strong>Memory:</strong> <span id="stat-ram">Loading...</span></div>
+        <!-- 2. System Telemetry & Health -->
+        <div class="section-header">
+            <span>&#128187; SYSTEM TELEMETRY &amp; HARDWARE HEALTH</span>
+            <button class="btn" style="padding:6px 12px;font-size:12px;background:#1e293b;color:#38bdf8;border:1px solid var(--border-color);" onclick="fetchTelemetry()">&#8635; Refresh Stats</button>
+        </div>
+        <div class="telemetry-grid">
+            <div class="telemetry-item"><strong>Host:</strong> <span id="stat-host">Loading...</span></div>
+            <div class="telemetry-item"><strong>IP:</strong> <span id="stat-ip">Loading...</span></div>
+            <div class="telemetry-item"><strong>Uptime:</strong> <span id="stat-uptime">Loading...</span></div>
+            <div class="telemetry-item"><strong>Memory:</strong> <span id="stat-ram">Loading...</span></div>
+            <div class="telemetry-item"><strong>CPU Load:</strong> <span id="stat-load">Loading...</span></div>
+            <div class="telemetry-item"><strong>CPU Temp:</strong> <span id="stat-temp">Loading...</span></div>
+            <div class="telemetry-item"><strong>Disk (RAM):</strong> <span id="stat-disk">Loading...</span></div>
+            <div class="telemetry-item"><strong>Active WiFi:</strong> <span id="stat-wifi">Loading...</span></div>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;margin-top:12px;">
-            <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/restart-browser')">&#8635; Restart Browser</button>
-            <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/screen-off')">&#9790; Screen Sleep (DPMS Off)</button>
-            <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/screen-on')">&#9788; Screen Wake (DPMS On)</button>
-            <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/rotate?dir=normal')">&#8634; Rotate Landscape (Normal)</button>
-            <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/rotate?dir=right')">&#8635; Rotate Portrait (90°)</button>
-            <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/volume?action=toggle')">&#128266; Mute / Unmute Audio</button>
+        <!-- 3. Network & WiFi Manager -->
+        <div class="section-header">
+            <span>&#128246; WIRELESS &amp; NETWORK MANAGER</span>
+        </div>
+        <div class="os-card">
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="scanWifi()">&#128269; Scan WiFi Networks</button>
+                <select id="wifi-networks" style="max-width:320px;">
+                    <option value="">-- Select Network (Scan first) --</option>
+                </select>
+                <input type="password" id="wifi-pass" placeholder="Network Password" style="max-width:240px;">
+                <button class="btn" onclick="connectWifi()">&#128279; Connect WiFi</button>
+                <span id="wifi-status" style="font-size:14px;color:var(--accent-blue);"></span>
+            </div>
+        </div>
+
+        <!-- 4. Display, Graphics & Audio -->
+        <div class="section-header">
+            <span>&#128250; DISPLAY, RESOLUTION &amp; AUDIO</span>
+        </div>
+        <div class="os-card">
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                <label style="color:var(--accent-blue);font-weight:600;font-size:14px;">Resolution:</label>
+                <select id="display-modes" style="max-width:220px;">
+                    <option value="auto">Auto (Native Monitor)</option>
+                    <option value="1920x1080">1920x1080 (1080p)</option>
+                    <option value="1280x720">1280x720 (720p)</option>
+                    <option value="1024x768">1024x768</option>
+                </select>
+                <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="applyResolution()">Set Resolution</button>
+                <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/rotate?dir=normal')">&#8634; Landscape</button>
+                <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/rotate?dir=right')">&#8635; Portrait (90°)</button>
+                <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/screen-off')">&#9790; Screen Sleep</button>
+                <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/screen-on')">&#9788; Screen Wake</button>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;margin-top:8px;flex-wrap:wrap;">
+                <label style="color:var(--accent-blue);font-weight:600;font-size:14px;">Volume:</label>
+                <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/volume?action=toggle')">&#128266; Mute / Unmute</button>
+                <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/volume?action=down')">&#128265; Vol -</button>
+                <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/volume?action=up')">&#128266; Vol +</button>
+                <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/volume?action=50%')">50%</button>
+                <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/volume?action=100%')">100%</button>
+            </div>
+        </div>
+
+        <!-- 5. Interactive OS Terminal & Diagnostics -->
+        <div class="section-header">
+            <span>&#62;_ INTERACTIVE OS TERMINAL &amp; DIAGNOSTICS</span>
+            <button class="btn" style="padding:6px 12px;font-size:12px;background:#059669;color:#fff;" onclick="sysAction('/api/system/terminal')">&#9654; Open On-Screen Xterm</button>
+        </div>
+        <div class="os-card">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn" style="padding:6px 12px;font-size:13px;background:#1e293b;color:#38bdf8;border:1px solid var(--border-color);" onclick="runPreset('ip -br a')">Network IPs</button>
+                <button class="btn" style="padding:6px 12px;font-size:13px;background:#1e293b;color:#38bdf8;border:1px solid var(--border-color);" onclick="runPreset('ping -c 3 8.8.8.8')">Ping Test</button>
+                <button class="btn" style="padding:6px 12px;font-size:13px;background:#1e293b;color:#38bdf8;border:1px solid var(--border-color);" onclick="runPreset('df -h')">Disk Space</button>
+                <button class="btn" style="padding:6px 12px;font-size:13px;background:#1e293b;color:#38bdf8;border:1px solid var(--border-color);" onclick="runPreset('lsblk')">Block Devices</button>
+                <button class="btn" style="padding:6px 12px;font-size:13px;background:#1e293b;color:#38bdf8;border:1px solid var(--border-color);" onclick="runPreset('free -m')">RAM Info</button>
+                <button class="btn" style="padding:6px 12px;font-size:13px;background:#1e293b;color:#38bdf8;border:1px solid var(--border-color);" onclick="runPreset('lspci | head -n 10')">PCI Devices</button>
+                <button class="btn" style="padding:6px 12px;font-size:13px;background:#1e293b;color:#38bdf8;border:1px solid var(--border-color);" onclick="runPreset('dmesg | tail -n 15')">Kernel Logs</button>
+            </div>
+            <div style="display:flex;gap:10px;">
+                <input type="text" id="cmd-input" placeholder="Enter shell command (e.g. uname -a, ps aux)..." onkeydown="if(event.key==='Enter') executeCmd()">
+                <button class="btn" onclick="executeCmd()">Run</button>
+                <button class="btn" style="background:#334155;color:#fff;" onclick="clearTerminal()">Clear</button>
+            </div>
+            <div class="terminal-box" id="terminal-out">OS Diagnostic Console Ready. Select a preset or type a command above.</div>
+        </div>
+
+        <!-- 6. Power & System Management -->
+        <div class="section-header">
+            <span>&#9888; POWER &amp; RECOVERY CONTROLS</span>
+        </div>
+        <div class="btn-group">
+            <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/restart-browser')">&#8635; Restart Chromium Browser</button>
             <button class="btn" style="background:#d97706;color:#0b0f19;" onclick="if(confirm('Reboot this computer now?')) sysAction('/api/system/reboot')">&#9888; Reboot Computer</button>
             <button class="btn" style="background:#dc2626;color:#ffffff;" onclick="if(confirm('Power off this computer now?')) sysAction('/api/system/poweroff')">&#9211; Shutdown / Power Off</button>
         </div>
@@ -160,6 +293,10 @@
                     document.getElementById('stat-ip').textContent = data.ip || 'Unknown';
                     document.getElementById('stat-uptime').textContent = data.uptime || 'Unknown';
                     document.getElementById('stat-ram').textContent = data.memory || 'Unknown';
+                    document.getElementById('stat-load').textContent = data.cpu_load || 'N/A';
+                    document.getElementById('stat-temp').textContent = data.cpu_temp || 'N/A';
+                    document.getElementById('stat-disk').textContent = data.disk || 'N/A';
+                    document.getElementById('stat-wifi').textContent = data.wifi || 'Disconnected';
                 })
                 .catch(() => {
                     document.getElementById('stat-host').textContent = 'Kiosk Host';
@@ -169,7 +306,132 @@
                 });
         }
         fetchTelemetry();
-        setInterval(fetchTelemetry, 10000);
+        setInterval(fetchTelemetry, 8000);
+
+        function scanWifi() {
+            const status = document.getElementById('wifi-status');
+            const select = document.getElementById('wifi-networks');
+            status.textContent = 'Scanning WiFi...';
+            select.innerHTML = '<option value="">Scanning...</option>';
+            fetch('/api/system/wifi/scan')
+                .then(r => r.json())
+                .then(data => {
+                    select.innerHTML = '<option value="">-- Select Network --</option>';
+                    if (data.networks && data.networks.length > 0) {
+                        data.networks.forEach(net => {
+                            const opt = document.createElement('option');
+                            opt.value = net.ssid;
+                            opt.textContent = `${net.ssid} (${net.signal}%, ${net.security})`;
+                            select.appendChild(opt);
+                        });
+                        status.textContent = `Found ${data.networks.length} networks`;
+                    } else {
+                        status.textContent = 'No wireless networks found (or WiFi hardware absent)';
+                    }
+                })
+                .catch(err => {
+                    status.textContent = 'Scan failed: ' + err;
+                });
+        }
+
+        function connectWifi() {
+            const select = document.getElementById('wifi-networks');
+            const pass = document.getElementById('wifi-pass');
+            const status = document.getElementById('wifi-status');
+            const ssid = select.value;
+            if (!ssid) {
+                alert('Please select or enter an SSID');
+                return;
+            }
+            status.textContent = `Connecting to ${ssid}...`;
+            fetch('/api/system/wifi/connect', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ssid: ssid, password: pass.value })
+            })
+            .then(r => r.json())
+            .then(data => {
+                status.textContent = data.message || (data.status === 'ok' ? 'Connected' : 'Failed');
+                fetchTelemetry();
+            })
+            .catch(err => {
+                status.textContent = 'Connection error: ' + err;
+            });
+        }
+
+        function loadResolutions() {
+            fetch('/api/system/resolution')
+                .then(r => r.json())
+                .then(data => {
+                    const select = document.getElementById('display-modes');
+                    if (data.available && data.available.length > 0) {
+                        select.innerHTML = '<option value="auto">Auto (Native Monitor)</option>';
+                        data.available.forEach(m => {
+                            const opt = document.createElement('option');
+                            opt.value = m;
+                            opt.textContent = m + (m === data.current ? ' (Current)' : '');
+                            if (m === data.current) opt.selected = true;
+                            select.appendChild(opt);
+                        });
+                    }
+                })
+                .catch(() => {});
+        }
+        loadResolutions();
+
+        function applyResolution() {
+            const mode = document.getElementById('display-modes').value;
+            fetch('/api/system/resolution', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mode: mode })
+            })
+            .then(r => r.json())
+            .then(data => {
+                alert(data.message || 'Resolution updated');
+            })
+            .catch(err => {
+                alert('Resolution update failed: ' + err);
+            });
+        }
+
+        function runPreset(cmd) {
+            document.getElementById('cmd-input').value = cmd;
+            executeCmd();
+        }
+
+        function executeCmd() {
+            const cmd = document.getElementById('cmd-input').value.trim();
+            if (!cmd) return;
+            const term = document.getElementById('terminal-out');
+            term.textContent += `
+$ ${cmd}
+Running...`;
+            term.scrollTop = term.scrollHeight;
+            fetch('/api/system/exec', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cmd: cmd })
+            })
+            .then(r => r.json())
+            .then(data => {
+                term.textContent += `
+${data.output || '(No output)'}
+`;
+                term.scrollTop = term.scrollHeight;
+            })
+            .catch(err => {
+                term.textContent += `
+Error: ${err}
+`;
+                term.scrollTop = term.scrollHeight;
+            });
+        }
+
+        function clearTerminal() {
+            document.getElementById('terminal-out').textContent = 'OS Diagnostic Console Cleared.
+';
+        }
 
         const clock = document.getElementById('kiosk-clock');
         function updateClock() {
