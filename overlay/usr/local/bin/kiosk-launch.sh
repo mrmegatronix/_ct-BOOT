@@ -21,14 +21,19 @@ fi
 
 # Attempt to enforce native display resolution
 if command -v xrandr >/dev/null 2>&1; then
+    xrandr -q 2>/dev/null | grep " disconnected" | awk '{print $1}' | while read -r disc; do
+        xrandr --output "$disc" --off 2>/dev/null || true
+    done
     PRIMARY=$(xrandr -q 2>/dev/null | grep " connected" | head -n 1 | awk '{print $1}')
     if [ -n "$PRIMARY" ]; then
-        xrandr --output "$PRIMARY" --mode 1920x1080 --rate 60 2>/dev/null || \
-        xrandr --output "$PRIMARY" --mode 1920x1080 2>/dev/null || \
-        xrandr --auto 2>/dev/null || true
+        xrandr --output "$PRIMARY" --mode 1920x1080 --pos 0x0 --rate 60 2>/dev/null || \
+        xrandr --output "$PRIMARY" --mode 1920x1080 --pos 0x0 2>/dev/null || \
+        xrandr --output "$PRIMARY" --auto --pos 0x0 2>/dev/null || true
+        xrandr --output "$PRIMARY" --primary 2>/dev/null || true
     else
         xrandr --auto 2>/dev/null || xrandr -s 1920x1080 2>/dev/null || true
     fi
+    xrandr --fb 1920x1080 2>/dev/null || true
 fi
 
 # Start matchbox-window-manager to enforce exact 1080p root window containment
