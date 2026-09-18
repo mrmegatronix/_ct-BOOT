@@ -38,6 +38,7 @@
 - **Target Deployment**: Local Environment / Signage Display / Kiosk / Raspberry Pi 3, 4, 5
 
 ## 5. Episodic Memory & Change Log
+- **2026-09-18**: Enforced 1080p resolution pipeline: GRUB gfxmode/gfxpayload keep, kernel `video=1920x1080@60`, Xorg modeline registration with scale-from fallback, Chromium device scale factor clamp (`--force-device-scale-factor=1`), and live USB squashfs sync.
 - **2026-09-18**: Added native OS functions (WiFi manager, diagnostics shell, resolution switcher, GRUB power controls) and full Raspberry Pi compatibility (`config.txt`, `cmdline.txt`, `RPI-Run-Kiosk.sh`, `RPI-Setup-Autostart.sh`).
 - **2026-09-12**: Resolved universal GPT partition layout, fixed secondary GPT overlap hang, eliminated viewport zoom reduction bugs.
 - **2026-09-11**: Initialized persistent `memory.md` bank across repository root.

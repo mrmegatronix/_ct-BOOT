@@ -205,7 +205,13 @@ class KioskHandler(http.server.SimpleHTTPRequestHandler):
                 ok, out = run_cmd(f"{env_display} xrandr -q | grep ' connected' | head -n 1 | awk '{{print $1}}'")
                 primary = out if ok and out else ""
                 if primary:
-                    run_cmd(f"{env_display} xrandr --output {primary} --mode {mode}")
+                    if mode == "1920x1080":
+                        run_cmd(f"{env_display} xrandr --newmode '1920x1080_60.00' 173.00 1920 2048 2248 2576 1080 1083 1088 1120 -hsync +vsync 2>/dev/null; {env_display} xrandr --addmode {primary} '1920x1080_60.00' 2>/dev/null")
+                        ok_m, _ = run_cmd(f"{env_display} xrandr --output {primary} --mode 1920x1080 2>/dev/null || {env_display} xrandr --output {primary} --mode '1920x1080_60.00' 2>/dev/null")
+                        if not ok_m:
+                            run_cmd(f"{env_display} xrandr --output {primary} --auto && {env_display} xrandr --output {primary} --scale-from 1920x1080")
+                    else:
+                        run_cmd(f"{env_display} xrandr --output {primary} --mode {mode}")
                 else:
                     run_cmd(f"{env_display} xrandr -s {mode}")
             response_data["message"] = f"Resolution switched to {mode}"

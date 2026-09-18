@@ -186,10 +186,11 @@ insmod efi_uga
 insmod all_video
 insmod gfxterm
 
-set gfxmode=auto
+set gfxmode=1920x1080,1920x1080x32,1920x1080x24,1600x900,1280x720,auto
+set gfxpayload=keep
 
 menuentry "Autonomous Web Kiosk (Live RAM - Native KMS 1080p)" {
-    linux /live/vmlinuz boot=live quiet splash components console=tty1
+    linux /live/vmlinuz boot=live quiet splash components console=tty1 video=1920x1080@60
     initrd /live/initrd.img
 }
 

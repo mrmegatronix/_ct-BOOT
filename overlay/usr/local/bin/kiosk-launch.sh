@@ -22,16 +22,25 @@ fi
 # Attempt to enforce native display resolution
 if command -v xrandr >/dev/null 2>&1; then
     xrandr -q 2>/dev/null | grep " disconnected" | awk '{print $1}' | while read -r disc; do
-        xrandr --output "$disc" --off 2>/dev/null || true
+        [ -n "$disc" ] && xrandr --output "$disc" --off 2>/dev/null || true
     done
     PRIMARY=$(xrandr -q 2>/dev/null | grep " connected" | head -n 1 | awk '{print $1}')
     if [ -n "$PRIMARY" ]; then
-        xrandr --output "$PRIMARY" --mode 1920x1080 --pos 0x0 --rate 60 2>/dev/null || \
-        xrandr --output "$PRIMARY" --mode 1920x1080 --pos 0x0 2>/dev/null || \
-        xrandr --output "$PRIMARY" --auto --pos 0x0 2>/dev/null || true
-        xrandr --output "$PRIMARY" --primary 2>/dev/null || true
+        if ! xrandr -q 2>/dev/null | grep -A 25 "^$PRIMARY" | grep -q "1920x1080"; then
+            xrandr --newmode "1920x1080_60.00" 173.00 1920 2048 2248 2576 1080 1083 1088 1120 -hsync +vsync 2>/dev/null || true
+            xrandr --addmode "$PRIMARY" "1920x1080_60.00" 2>/dev/null || true
+        fi
+        if ! xrandr --output "$PRIMARY" --mode 1920x1080 --pos 0x0 --rate 60 2>/dev/null; then
+            if ! xrandr --output "$PRIMARY" --mode 1920x1080 --pos 0x0 2>/dev/null; then
+                if ! xrandr --output "$PRIMARY" --mode "1920x1080_60.00" --pos 0x0 2>/dev/null; then
+                    xrandr --output "$PRIMARY" --auto --pos 0x0 2>/dev/null || true
+                    xrandr --output "$PRIMARY" --scale-from 1920x1080 2>/dev/null || true
+                fi
+            fi
+        fi
+        xrandr --output "$PRIMARY" --primary --pos 0x0 2>/dev/null || true
     else
-        xrandr --auto 2>/dev/null || xrandr -s 1920x1080 2>/dev/null || true
+        xrandr -s 1920x1080 2>/dev/null || true
     fi
     xrandr --fb 1920x1080 2>/dev/null || true
 fi
@@ -62,6 +71,8 @@ while true; do
         --kiosk \
         --window-size=1920,1080 \
         --window-position=0,0 \
+        --force-device-scale-factor=1 \
+        --high-dpi-support=1 \
         --start-maximized \
         --noerrdialogs \
         --disable-infobars \
