@@ -91,7 +91,7 @@ if [ -n "$BOOT_PART" ] && [ -b "$BOOT_PART" ]; then
     mkdir -p "$MNT_BOOT/boot/grub"
     cat << 'EOF' > "$MNT_BOOT/boot/grub/grub.cfg"
 set default="0"
-set timeout=3
+set timeout=10
 
 insmod efi_gop
 insmod efi_uga

@@ -179,7 +179,7 @@ build_iso() {
     mkdir -p "${ISO_DIR}/boot/grub"
     cat << EOF > "${ISO_DIR}/boot/grub/grub.cfg"
 set default="0"
-set timeout=3
+set timeout=10
 
 insmod efi_gop
 insmod efi_uga
