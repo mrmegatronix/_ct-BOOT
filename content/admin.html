@@ -148,9 +148,13 @@
         </div>
         <div class="form-row">
             <label for="slide-urls">Slide URLs / Web Pages (One per line)</label>
-            <textarea id="slide-urls" rows="4" placeholder="weather.html&#10;https://your-dashboard.com&#10;https://news.example.com"></textarea>
-            <small style="color:var(--text-muted);font-size:13px;">
-                Enter URLs to display as rotating slides (e.g. <code>weather.html</code>, <code>https://...</code>). Leave empty for default modules.
+            <textarea id="slide-urls" rows="5" placeholder="https://mrmegatronix.github.io/_ct-MATRIX/&#10;weather.html&#10;https://your-dashboard.com"></textarea>
+            <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">
+                <button type="button" class="btn" style="padding:4px 10px;font-size:12px;background:#1e293b;color:#38bdf8;border:1px solid var(--border-color);" onclick="insertPresetUrl('https://mrmegatronix.github.io/_ct-MATRIX/')">+ Add _ct-MATRIX (GitHub)</button>
+                <button type="button" class="btn" style="padding:4px 10px;font-size:12px;background:#1e293b;color:#38bdf8;border:1px solid var(--border-color);" onclick="insertPresetUrl('weather.html')">+ Add Weather Module</button>
+            </div>
+            <small style="color:var(--text-muted);font-size:13px;margin-top:6px;display:block;">
+                Enter URLs to display as rotating slides (e.g. <code>https://mrmegatronix.github.io/_ct-MATRIX/</code>, <code>weather.html</code>).
             </small>
         </div>
         <div class="btn-group">
@@ -268,6 +272,14 @@
         }
         if (savedUrls !== null) {
             urlsTextarea.value = savedUrls;
+        } else {
+            urlsTextarea.value = 'https://mrmegatronix.github.io/_ct-MATRIX/\nweather.html';
+        }
+
+        function insertPresetUrl(url) {
+            const current = urlsTextarea.value.trim();
+            if (current.includes(url)) return;
+            urlsTextarea.value = current ? (current + '\n' + url) : url;
         }
 
         function saveSettings() {
