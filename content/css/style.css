@@ -1,11 +1,33 @@
 :root {
-    --bg-primary: #0b0f19;
-    --bg-card: #151c2e;
-    --accent-blue: #00d2ff;
-    --accent-glow: rgba(0, 210, 255, 0.4);
-    --text-main: #f3f4f6;
-    --text-muted: #9ca3af;
-    --border-color: #232f48;
+    --background: #09090b;
+    --foreground: #fafafa;
+    --card: #18181b;
+    --card-foreground: #fafafa;
+    --popover: #18181b;
+    --popover-foreground: #fafafa;
+    --primary: #fafafa;
+    --primary-foreground: #18181b;
+    --secondary: #27272a;
+    --secondary-foreground: #fafafa;
+    --muted: #27272a;
+    --muted-foreground: #a1a1aa;
+    --accent: #27272a;
+    --accent-foreground: #fafafa;
+    --destructive: #ef4444;
+    --destructive-foreground: #fafafa;
+    --border: #27272a;
+    --input: #27272a;
+    --ring: #d4d4d8;
+    --radius: 0.5rem;
+
+    /* Legacy mapping for components */
+    --bg-primary: var(--background);
+    --bg-card: var(--card);
+    --accent-blue: #38bdf8;
+    --accent-glow: rgba(56, 189, 248, 0.25);
+    --text-main: var(--foreground);
+    --text-muted: var(--muted-foreground);
+    --border-color: var(--border);
 }
 
 * {
@@ -13,6 +35,7 @@
     padding: 0;
     box-sizing: border-box;
     user-select: none;
+    border-color: var(--border);
 }
 
 html, body {
@@ -21,31 +44,32 @@ html, body {
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background-color: var(--bg-primary);
-    color: var(--text-main);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    letter-spacing: -0.01em;
     display: flex;
     flex-direction: column;
 }
 
 /* Header bar */
 .kiosk-header {
-    height: 90px;
+    height: 84px;
     width: 100%;
     padding: 0 48px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid var(--border-color);
-    background: rgba(15, 23, 42, 0.85);
-    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    background: rgba(9, 9, 11, 0.8);
+    backdrop-filter: blur(12px);
 }
 
 .kiosk-title {
-    font-size: 28px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    color: var(--accent-blue);
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--foreground);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -53,11 +77,11 @@ html, body {
 
 /* Clock with blinking colon */
 .kiosk-clock {
-    font-family: "Courier New", Courier, monospace;
-    font-size: 36px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    color: #ffffff;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--foreground);
     white-space: nowrap;
 }
 
@@ -67,41 +91,47 @@ html, body {
 
 @keyframes blink-animation {
     0%, 49% { opacity: 1; }
-    50%, 100% { opacity: 0; }
+    50%, 100% { opacity: 0.2; }
 }
 
-/* Status indicator badge */
+/* Status indicator badge (shadcn/ui Badge) */
 .status-badge {
-    padding: 6px 16px;
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
     border-radius: 9999px;
-    font-size: 14px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
     white-space: nowrap;
-    background: #1e293b;
-    border: 1px solid var(--border-color);
+    background: var(--secondary);
+    color: var(--secondary-foreground);
+    border: 1px solid var(--border);
     transition: all 0.2s ease;
 }
 
 .status-badge.live {
-    color: #10b981;
-    border-color: #059669;
+    background: rgba(16, 185, 129, 0.12);
+    color: #34d399;
+    border-color: rgba(16, 185, 129, 0.25);
 }
 
 .status-badge.paused {
-    color: #f59e0b;
-    border-color: #d97706;
+    background: rgba(245, 158, 11, 0.12);
+    color: #fbbf24;
+    border-color: rgba(245, 158, 11, 0.25);
 }
 
 .status-badge.locked {
-    color: #ef4444;
-    border-color: #dc2626;
+    background: rgba(239, 68, 68, 0.12);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.25);
 }
 
 .status-badge.manual {
+    background: rgba(56, 189, 248, 0.12);
     color: #38bdf8;
-    border-color: #0284c7;
+    border-color: rgba(56, 189, 248, 0.25);
 }
 
 /* Main presentation canvas */
@@ -147,87 +177,101 @@ body.hide-banners .kiosk-viewport {
 .card-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 32px;
+    gap: 24px;
     width: 100%;
-    max-width: 1760px;
+    max-width: 1680px;
 }
 
+/* shadcn/ui Card Component */
 .info-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 36px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
     display: flex;
     flex-direction: column;
     gap: 16px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.info-card:hover {
+    border-color: #3f3f46;
 }
 
 .info-card h3 {
-    font-size: 24px;
-    color: var(--accent-blue);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .info-card p {
-    font-size: 18px;
-    line-height: 1.5;
-    color: var(--text-muted);
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--muted-foreground);
 }
 
 .info-card .metric {
-    font-size: 48px;
-    font-weight: 800;
-    color: #ffffff;
+    font-size: 40px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    color: var(--foreground);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-/* Footer / Progress bar */
+/* Footer / Progress bar (shadcn/ui subtle styling) */
 .kiosk-footer {
-    height: 70px;
+    height: 64px;
     width: 100%;
     padding: 0 48px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-top: 2px solid var(--border-color);
-    background: rgba(15, 23, 42, 0.95);
-    font-size: 16px;
-    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    background: rgba(9, 9, 11, 0.85);
+    backdrop-filter: blur(12px);
+    font-size: 13px;
+    color: var(--muted-foreground);
     white-space: nowrap;
 }
 
 .footer-nav-help {
     display: flex;
-    gap: 20px;
+    gap: 16px;
 }
 
+/* shadcn/ui Kbd / Badge */
 .key-tag {
-    background: #334155;
-    color: #ffffff;
-    padding: 2px 8px;
+    background: var(--secondary);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
     border-radius: 4px;
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 11px;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-weight: 600;
 }
 
+/* shadcn/ui Progress component */
 .progress-track {
     position: absolute;
-    bottom: 68px;
+    bottom: 64px;
     left: 0;
     width: 100%;
-    height: 32px;
-    background: #1e293b;
+    height: 4px;
+    background: var(--secondary);
 }
 
 .progress-fill {
     height: 100%;
     width: 0%;
-    background: var(--accent-blue);
-    box-shadow: 0 0 10px var(--accent-glow);
+    background: var(--foreground);
     transition: width 0.1s linear;
 }

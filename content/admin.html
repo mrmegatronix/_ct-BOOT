@@ -10,18 +10,21 @@
             overflow-y: auto !important;
             height: auto !important;
             min-height: 100vh;
+            background: var(--background);
+            color: var(--foreground);
         }
         .admin-container {
             width: 100%;
-            max-width: 1280px;
-            margin: 30px auto;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 36px;
+            max-width: 1240px;
+            margin: 32px auto;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: 28px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
         }
         .form-row {
             display: flex;
@@ -29,61 +32,80 @@
             gap: 8px;
         }
         .form-row label {
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--accent-blue);
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+            color: var(--foreground);
             white-space: nowrap;
         }
         input, select, textarea {
-            background: #0f172a;
-            border: 1px solid var(--border-color);
-            color: #ffffff;
-            font-size: 16px;
-            padding: 10px 14px;
-            border-radius: 8px;
+            background: var(--background);
+            border: 1px solid var(--border);
+            color: var(--foreground);
+            font-size: 14px;
+            padding: 8px 12px;
+            border-radius: calc(var(--radius) - 2px);
             outline: none;
             width: 100%;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
         input:focus, select:focus, textarea:focus {
-            border-color: var(--accent-blue);
+            border-color: #52525b;
+            box-shadow: 0 0 0 1px #52525b;
         }
         .btn-group {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             flex-wrap: wrap;
         }
         .btn {
-            background: var(--accent-blue);
-            color: #0b0f19;
-            font-weight: 700;
-            font-size: 15px;
-            padding: 10px 20px;
-            border-radius: 8px;
-            border: none;
+            background: var(--primary);
+            color: var(--primary-foreground);
+            font-weight: 500;
+            font-size: 14px;
+            letter-spacing: -0.01em;
+            padding: 8px 16px;
+            border-radius: calc(var(--radius) - 2px);
+            border: 1px solid transparent;
             cursor: pointer;
             white-space: nowrap;
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            transition: all 0.2s ease;
+            transition: background 0.15s ease, opacity 0.15s ease;
         }
         .btn:hover {
-            filter: brightness(1.15);
+            opacity: 0.9;
+        }
+        .btn-outline {
+            background: transparent;
+            color: var(--foreground);
+            border: 1px solid var(--border);
+        }
+        .btn-outline:hover {
+            background: var(--secondary);
+        }
+        .btn-destructive {
+            background: var(--destructive);
+            color: var(--destructive-foreground);
+        }
+        .btn-destructive:hover {
+            opacity: 0.9;
         }
         .section-header {
-            color: var(--accent-blue);
-            font-size: 20px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
+            color: var(--foreground);
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-top: 10px;
+            margin-top: 8px;
         }
         .os-card {
-            background: #0f172a;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: calc(var(--radius) - 2px);
             padding: 20px;
             display: flex;
             flex-direction: column;
@@ -93,25 +115,30 @@
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 12px;
-            font-size: 14px;
+            font-size: 13px;
         }
         .telemetry-item {
-            background: #1e293b;
+            background: var(--background);
             padding: 10px 14px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
+            border-radius: calc(var(--radius) - 2px);
+            border: 1px solid var(--border);
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            color: var(--muted-foreground);
+        }
+        .telemetry-item strong {
+            color: var(--foreground);
+            margin-right: 4px;
         }
         .terminal-box {
-            background: #050811;
-            border: 1px solid #1f293d;
-            border-radius: 8px;
+            background: #000000;
+            border: 1px solid var(--border);
+            border-radius: calc(var(--radius) - 2px);
             padding: 12px 16px;
-            font-family: "Courier New", Courier, monospace;
+            font-family: ui-monospace, SFMono-Regular, monospace;
             font-size: 13px;
-            color: #38bdf8;
+            color: #4ade80;
             height: 180px;
             overflow-y: auto;
             white-space: pre-wrap;
@@ -255,9 +282,9 @@
             <span>&#9888; POWER &amp; RECOVERY CONTROLS</span>
         </div>
         <div class="btn-group">
-            <button class="btn" style="background:#1e293b;color:#fff;border:1px solid var(--border-color);" onclick="sysAction('/api/system/restart-browser')">&#8635; Restart Chromium Browser</button>
-            <button class="btn" style="background:#d97706;color:#0b0f19;" onclick="if(confirm('Reboot this computer now?')) sysAction('/api/system/reboot')">&#9888; Reboot Computer</button>
-            <button class="btn" style="background:#dc2626;color:#ffffff;" onclick="if(confirm('Power off this computer now?')) sysAction('/api/system/poweroff')">&#9211; Shutdown / Power Off</button>
+            <button class="btn btn-outline" onclick="sysAction('/api/system/restart-browser')">&#8635; Restart Chromium Browser</button>
+            <button class="btn" style="background:#f59e0b;color:#09090b;" onclick="if(confirm('Reboot this computer now?')) sysAction('/api/system/reboot')">&#9888; Reboot Computer</button>
+            <button class="btn btn-destructive" onclick="if(confirm('Power off this computer now?')) sysAction('/api/system/poweroff')">&#9211; Shutdown / Power Off</button>
         </div>
     </div>
 
