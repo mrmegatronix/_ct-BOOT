@@ -7,6 +7,14 @@ xset -dpms || true
 xset s off || true
 xset s noblank || true
 
+# Auto-activate wired Ethernet connections if link is present
+if command -v nmcli >/dev/null 2>&1; then
+    nmcli networking on 2>/dev/null || true
+    for eth in $(nmcli -t -f DEVICE,TYPE dev 2>/dev/null | grep ':ethernet$' | cut -d: -f1); do
+        nmcli dev connect "$eth" 2>/dev/null || true
+    done
+fi
+
 # Mount KIOSKDATA partition if available
 CONTENT_DIR="/opt/kiosk/content"
 if [ -d "/mnt/kiosk-data" ] && [ -f "/mnt/kiosk-data/index.html" ]; then

@@ -173,6 +173,7 @@
             <div class="telemetry-item"><strong>CPU Load:</strong> <span id="stat-load">Loading...</span></div>
             <div class="telemetry-item"><strong>CPU Temp:</strong> <span id="stat-temp">Loading...</span></div>
             <div class="telemetry-item"><strong>Disk (RAM):</strong> <span id="stat-disk">Loading...</span></div>
+            <div class="telemetry-item"><strong>Ethernet:</strong> <span id="stat-eth">Loading...</span></div>
             <div class="telemetry-item"><strong>Active WiFi:</strong> <span id="stat-wifi">Loading...</span></div>
         </div>
 
@@ -229,6 +230,7 @@
         <div class="os-card">
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
                 <button class="btn" style="padding:6px 12px;font-size:13px;background:#1e293b;color:#38bdf8;border:1px solid var(--border-color);" onclick="runPreset('ip -br a')">Network IPs</button>
+                <button class="btn" style="padding:6px 12px;font-size:13px;background:#1e293b;color:#38bdf8;border:1px solid var(--border-color);" onclick="runPreset('nmcli dev status')">Ethernet/WiFi Devs</button>
                 <button class="btn" style="padding:6px 12px;font-size:13px;background:#1e293b;color:#38bdf8;border:1px solid var(--border-color);" onclick="runPreset('ping -c 3 8.8.8.8')">Ping Test</button>
                 <button class="btn" style="padding:6px 12px;font-size:13px;background:#1e293b;color:#38bdf8;border:1px solid var(--border-color);" onclick="runPreset('df -h')">Disk Space</button>
                 <button class="btn" style="padding:6px 12px;font-size:13px;background:#1e293b;color:#38bdf8;border:1px solid var(--border-color);" onclick="runPreset('lsblk')">Block Devices</button>
@@ -296,6 +298,7 @@
                     document.getElementById('stat-load').textContent = data.cpu_load || 'N/A';
                     document.getElementById('stat-temp').textContent = data.cpu_temp || 'N/A';
                     document.getElementById('stat-disk').textContent = data.disk || 'N/A';
+                    document.getElementById('stat-eth').textContent = data.ethernet || 'Disconnected';
                     document.getElementById('stat-wifi').textContent = data.wifi || 'Disconnected';
                 })
                 .catch(() => {
@@ -303,6 +306,7 @@
                     document.getElementById('stat-ip').textContent = window.location.hostname;
                     document.getElementById('stat-uptime').textContent = 'Active';
                     document.getElementById('stat-ram').textContent = 'Online';
+                    document.getElementById('stat-eth').textContent = 'Active';
                 });
         }
         fetchTelemetry();

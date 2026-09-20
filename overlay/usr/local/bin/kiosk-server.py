@@ -84,6 +84,23 @@ def get_system_stats():
     except Exception:
         pass
 
+    active_eth = "Disconnected"
+    try:
+        ok, out = run_cmd("nmcli -t -f DEVICE,TYPE,STATE dev 2>/dev/null | grep ':ethernet:connected' | cut -d: -f1")
+        if ok and out:
+            active_eth = f"Connected ({out.strip()})"
+    except Exception:
+        pass
+
+    # Fallback IP detection across all interfaces if socket connection fails
+    if ip == "127.0.0.1":
+        try:
+            ok, out = run_cmd("ip -4 -o addr show scope global | awk '{print $4}' | cut -d/ -f1 | head -n 1")
+            if ok and out:
+                ip = out.strip()
+        except Exception:
+            pass
+
     return {
         "hostname": socket.gethostname(),
         "ip": ip,
@@ -93,6 +110,7 @@ def get_system_stats():
         "memory": ram_used,
         "disk": disk_info,
         "wifi": active_wifi,
+        "ethernet": active_eth,
         "display": os.environ.get("DISPLAY", ":0")
     }
 

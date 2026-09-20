@@ -113,16 +113,25 @@ EOF
         xinit \
         x11-xserver-utils \
         xserver-xorg-video-all \
+        firmware-linux \
+        firmware-linux-free \
+        firmware-linux-nonfree \
         firmware-misc-nonfree \
         firmware-amd-graphics \
+        firmware-realtek \
+        firmware-atheros \
+        firmware-iwlwifi \
+        firmware-intel-sound \
         matchbox-window-manager \
         unclutter \
         chromium \
         python3 \
         ca-certificates \
-        firmware-linux-free \
         alsa-utils \
         network-manager \
+        wpasupplicant \
+        wireless-tools \
+        ethtool \
         xterm \
         htop \
         pciutils \
