@@ -89,6 +89,17 @@ if [ -n "$BOOT_PART" ] && [ -b "$BOOT_PART" ]; then
     mkdir -p "$MNT_BOOT/live"
     cp -r "${LIVE_DIR}/." "$MNT_BOOT/live/"
     mkdir -p "$MNT_BOOT/boot/grub"
+    mkdir -p "$MNT_BOOT/EFI/BOOT"
+
+    # Ensure UEFI bootloaders are present
+    if [ ! -f "$MNT_BOOT/EFI/BOOT/BOOTX64.EFI" ]; then
+        echo "Reinstalling UEFI 64-bit bootloader..."
+        grub-install --target=x86_64-efi --efi-directory="$MNT_BOOT" --boot-directory="$MNT_BOOT/boot" --bootloader-id=BOOT --removable --no-nvram || true
+    fi
+    if [ -d "/usr/lib/grub/i386-efi" ] && [ ! -f "$MNT_BOOT/EFI/BOOT/BOOTIA32.EFI" ]; then
+        echo "Installing UEFI 32-bit bootloader (IA32)..."
+        grub-install --target=i386-efi --efi-directory="$MNT_BOOT" --boot-directory="$MNT_BOOT/boot" --bootloader-id=BOOT --removable --no-nvram || true
+    fi
     cat << 'EOF' > "$MNT_BOOT/boot/grub/grub.cfg"
 set default="0"
 set timeout=30

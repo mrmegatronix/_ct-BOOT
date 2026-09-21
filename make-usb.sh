@@ -150,6 +150,18 @@ grub-install \
     --removable \
     --no-nvram
 
+# Install UEFI 32-bit bootloader (/EFI/BOOT/BOOTIA32.EFI for older Intel Atom/Core laptops)
+if [ -d "/usr/lib/grub/i386-efi" ]; then
+    echo "Installing UEFI 32-bit bootloader (IA32)..."
+    grub-install \
+        --target=i386-efi \
+        --efi-directory="$MNT_BOOT" \
+        --boot-directory="$MNT_BOOT/boot" \
+        --bootloader-id=BOOT \
+        --removable \
+        --no-nvram || true
+fi
+
 echo "Writing Universal GRUB Configuration..."
 cat << 'EOF' > "$MNT_BOOT/boot/grub/grub.cfg"
 set default="0"
