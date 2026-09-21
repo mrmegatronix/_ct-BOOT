@@ -162,6 +162,13 @@ if [ -d "/usr/lib/grub/i386-efi" ]; then
         --no-nvram || true
 fi
 
+# Universal EFI stub to locate KIOSKBOOT independently of drive geometry
+cat << 'EOF' > "$MNT_BOOT/EFI/BOOT/grub.cfg"
+search --no-floppy --set=root --label KIOSKBOOT
+set prefix=($root)/boot/grub
+configfile $prefix/grub.cfg
+EOF
+
 echo "Writing Universal GRUB Configuration..."
 cat << 'EOF' > "$MNT_BOOT/boot/grub/grub.cfg"
 set default="0"

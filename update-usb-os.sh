@@ -100,6 +100,13 @@ if [ -n "$BOOT_PART" ] && [ -b "$BOOT_PART" ]; then
         echo "Installing UEFI 32-bit bootloader (IA32)..."
         grub-install --target=i386-efi --efi-directory="$MNT_BOOT" --boot-directory="$MNT_BOOT/boot" --bootloader-id=BOOT --removable --no-nvram || true
     fi
+
+    # Universal EFI stub to locate KIOSKBOOT independently of drive geometry
+    cat << 'EOF' > "$MNT_BOOT/EFI/BOOT/grub.cfg"
+search --no-floppy --set=root --label KIOSKBOOT
+set prefix=($root)/boot/grub
+configfile $prefix/grub.cfg
+EOF
     cat << 'EOF' > "$MNT_BOOT/boot/grub/grub.cfg"
 set default="0"
 set timeout=30
