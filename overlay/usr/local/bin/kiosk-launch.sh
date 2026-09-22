@@ -63,11 +63,13 @@ fi
 
 # Start matchbox-window-manager to enforce exact root window containment
 if command -v matchbox-window-manager >/dev/null 2>&1; then
-    matchbox-window-manager -use_titlebar no -use_cursor no &
+    matchbox-window-manager -use_titlebar no &
 fi
 
-# Hide cursor when idle (timeout 1s)
-unclutter -idle 1 -root &
+# Hide cursor only when idle for 3 seconds
+if command -v unclutter >/dev/null 2>&1; then
+    unclutter -idle 3 -root &
+fi
 
 # Start local kiosk API & HTTP server
 export CONTENT_DIR

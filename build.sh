@@ -114,6 +114,9 @@ EOF
         x11-xserver-utils \
         xserver-xorg-video-all \
         xserver-xorg-video-intel \
+        xserver-xorg-input-all \
+        xserver-xorg-input-libinput \
+        xserver-xorg-input-evdev \
         intel-microcode \
         firmware-linux \
         firmware-linux-free \

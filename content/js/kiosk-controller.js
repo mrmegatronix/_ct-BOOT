@@ -49,8 +49,10 @@ class KioskController {
 
     loadConfiguredUrlSlides() {
         const urlParams = new URLSearchParams(window.location.search);
-        const urlsRaw = urlParams.get('urls') || localStorage.getItem('kiosk_slide_urls');
-        if (!urlsRaw || !urlsRaw.trim()) return;
+        let urlsRaw = urlParams.get('urls') || localStorage.getItem('kiosk_slide_urls');
+        if (!urlsRaw || !urlsRaw.trim()) {
+            urlsRaw = "https://mrmegatronix.github.io/_ct-MATRIX/\nweather.html";
+        }
 
         const urlList = urlsRaw.split(/[\r\n,]+/).map(u => u.trim()).filter(u => u.length > 0 && !u.startsWith('#'));
         if (urlList.length === 0) return;

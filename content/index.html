@@ -16,72 +16,14 @@
 
     <!-- Slide Viewport -->
     <main class="kiosk-viewport">
-        <!-- Module A: Slide 1 -->
-        <section class="slide active" data-module="system">
-            <div class="card-grid">
-                <div class="info-card">
-                    <h3>BOOT STATUS</h3>
-                    <div class="metric">100% READY</div>
-                    <p>Self-contained USB image booted into RAM with OverlayFS protection.</p>
-                </div>
-                <div class="info-card">
-                    <h3>STORAGE HEALTH</h3>
-                    <div class="metric">READ-ONLY</div>
-                    <p>Protected squashfs filesystem. Hardware pull-safe with zero corruption risk.</p>
-                </div>
-                <div class="info-card">
-                    <h3>DISPLAY PIPELINE</h3>
-                    <div class="metric">1080P 60FPS</div>
-                    <p>Chromium kiosk engine with hardware acceleration and auto cursor hiding.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Module A: Slide 2 -->
-        <section class="slide" data-module="system">
-            <div class="card-grid">
-                <div class="info-card">
-                    <h3>PARTITION SCHEME</h3>
-                    <div class="metric">HYBRID DUAL</div>
-                    <p>Partition 1: Boot/OS (ISO/SquashFS). Partition 2: KIOSKDATA (FAT32 user assets).</p>
-                </div>
-                <div class="info-card">
-                    <h3>SYSTEM MEMORY</h3>
-                    <div class="metric">TMPFS ACTIVE</div>
-                    <p>All transient browser logs and caches are written exclusively to volatile RAM.</p>
-                </div>
-                <div class="info-card">
-                    <h3>FAILOVER &amp; RECOVERY</h3>
-                    <div class="metric">AUTO-RESTART</div>
-                    <p>Process supervisor restarts browser immediately if terminated or crashed.</p>
-                </div>
-            </div>
+        <!-- Module A: _ct-MATRIX -->
+        <section class="slide active" data-module="matrix" style="padding: 0; width: 100%; height: 100%;">
+            <iframe src="https://mrmegatronix.github.io/_ct-MATRIX/" style="width: 100%; height: 100%; border: none; overflow: hidden; display: block;" title="_ct-MATRIX"></iframe>
         </section>
 
         <!-- Module B: Weather (ct-wea1) -->
         <section class="slide" data-module="weather" style="padding: 0; width: 100%; height: 100%;">
-            <iframe src="weather.html" style="width: 100%; height: 100%; border: none; overflow: hidden; display: block;" title="Christchurch Weather Display"></iframe>
-        </section>
-
-        <!-- Module C: Network -->
-        <section class="slide" data-module="network">
-            <div class="card-grid">
-                <div class="info-card">
-                    <h3>NETWORK ORCHESTRATION</h3>
-                    <div class="metric">STANDALONE</div>
-                    <p>Zero internet required. Built-in local web server delivers content directly.</p>
-                </div>
-                <div class="info-card">
-                    <h3>REMOTE MANAGEMENT</h3>
-                    <div class="metric">PORT 8080</div>
-                    <p>Optional LAN access for administration and remote control triggers.</p>
-                </div>
-                <div class="info-card">
-                    <h3>EXPANSION READY</h3>
-                    <div class="metric">PLUG &amp; PLAY</div>
-                    <p>Drop custom HTML, JS, and CSS files into the USB drive to update signage.</p>
-                </div>
-            </div>
+            <iframe src="weather.html" style="width: 100%; height: 100%; border: none; overflow: hidden; display: block;" title="Christchurch Weather Display (ct-wea1)"></iframe>
         </section>
 
         <!-- Progress Bar Indicator -->
