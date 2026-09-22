@@ -127,6 +127,11 @@ menuentry "Autonomous Web Kiosk (Live RAM - Native KMS 1080p)" {
     initrd /live/initrd.img
 }
 
+menuentry "Autonomous Web Kiosk (800x600 Resolution Mode)" {
+    linux /live/vmlinuz boot=live quiet splash components console=tty1 video=800x600@60 kiosk_res=800x600
+    initrd /live/initrd.img
+}
+
 menuentry "Autonomous Web Kiosk (Safe Graphics / Nomodeset)" {
     linux /live/vmlinuz boot=live quiet splash components console=tty1 nomodeset
     initrd /live/initrd.img

@@ -94,28 +94,25 @@ if [ "$TOTAL_SECTORS" -gt 20480 ]; then
     dd if=/dev/zero of="$TARGET_DEV" bs=512 seek=$((TOTAL_SECTORS - 20480)) count=20480 status=none || true
 fi
 
-echo "=== 2. Partitioning Universal GPT Layout (Dual UEFI + BIOS) ==="
-# Partition 1: 2MB BIOS Boot Partition (for Legacy BIOS MBR via GRUB i386-pc)
-# Partition 2: 3000MB FAT32 EFI System Partition (Label: KIOSKBOOT, flag: esp)
-# Partition 3: Remaining disk space FAT32 (Label: KIOSKDATA for user signage)
+echo "=== 2. Partitioning Universal MBR Layout (Dual UEFI + Legacy BIOS) ==="
+# Partition 1: 3000MB FAT32 with active boot flag (for UEFI ESP BOOTX64/BOOTIA32 & Legacy BIOS boot)
+# Partition 2: Remaining disk space FAT32 (Label: KIOSKDATA for user signage)
 parted --script "$TARGET_DEV" -- \
-    mklabel gpt \
-    mkpart "BIOS_BOOT" 1MiB 3MiB \
-    set 1 bios_grub on \
-    mkpart "KIOSKBOOT" fat32 3MiB 3000MiB \
-    set 2 esp on \
-    mkpart "$CONTENT_LABEL" fat32 3000MiB 100%
+    mklabel msdos \
+    mkpart primary fat32 1MiB 3000MiB \
+    set 1 boot on \
+    mkpart primary fat32 3000MiB 100%
 
 partprobe "$TARGET_DEV" || sleep 2
 udevadm settle 2>/dev/null || sleep 2
 
 # Identify partition device nodes
 if [[ "$TARGET_DEV" =~ [0-9]$ ]]; then
-    BOOT_PART="${TARGET_DEV}p2"
-    DATA_PART="${TARGET_DEV}p3"
+    BOOT_PART="${TARGET_DEV}p1"
+    DATA_PART="${TARGET_DEV}p2"
 else
-    BOOT_PART="${TARGET_DEV}2"
-    DATA_PART="${TARGET_DEV}3"
+    BOOT_PART="${TARGET_DEV}1"
+    DATA_PART="${TARGET_DEV}2"
 fi
 
 echo "=== 3. Formatting Partitions as Native FAT32 ==="
@@ -190,6 +187,11 @@ menuentry "Autonomous Web Kiosk (Live RAM - Native KMS 1080p)" {
     initrd /live/initrd.img
 }
 
+menuentry "Autonomous Web Kiosk (800x600 Resolution Mode)" {
+    linux /live/vmlinuz boot=live quiet splash components console=tty1 video=800x600@60 kiosk_res=800x600
+    initrd /live/initrd.img
+}
+
 menuentry "Autonomous Web Kiosk (Safe Graphics / Nomodeset)" {
     linux /live/vmlinuz boot=live quiet splash components console=tty1 nomodeset
     initrd /live/initrd.img
@@ -250,9 +252,9 @@ partprobe "$TARGET_DEV" 2>/dev/null || sleep 2
 udevadm settle 2>/dev/null || sleep 2
 
 if [[ "$TARGET_DEV" =~ [0-9]$ ]]; then
-    DATA_PART="${TARGET_DEV}p3"
+    DATA_PART="${TARGET_DEV}p2"
 else
-    DATA_PART="${TARGET_DEV}3"
+    DATA_PART="${TARGET_DEV}2"
 fi
 
 # Wait up to 5s for device node if needed
