@@ -51,48 +51,95 @@ def get_system_stats():
     except Exception:
         pass
 
+    # RAM usage from /proc/meminfo
     ram_used = "Unknown"
     try:
-        ok, out = run_cmd("free -m | awk '/Mem:/ {print $3 \"MB / \" $2 \"MB\"}'")
-        if ok:
-            ram_used = out
+        with open("/proc/meminfo", "r") as f:
+            mem_info = {}
+            for line in f:
+                parts = line.split(":")
+                if len(parts) == 2:
+                    mem_info[parts[0].strip()] = int(parts[1].split()[0])
+            if "MemTotal" in mem_info and "MemAvailable" in mem_info:
+                total_mb = mem_info["MemTotal"] // 1024
+                avail_mb = mem_info["MemAvailable"] // 1024
+                used_mb = total_mb - avail_mb
+                ram_used = f"{used_mb}MB / {total_mb}MB"
     except Exception:
         pass
 
+    # CPU temperature scan across thermal zones and coretemp hwmon
     cpu_temp = "N/A"
     try:
-        if os.path.exists("/sys/class/thermal/thermal_zone0/temp"):
-            with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
-                temp_raw = float(f.read().strip())
-                cpu_temp = f"{temp_raw / 1000.0:.1f}°C"
+        for z in sorted(os.listdir("/sys/class/thermal") if os.path.exists("/sys/class/thermal") else []):
+            t_path = os.path.join("/sys/class/thermal", z, "temp")
+            if os.path.isfile(t_path):
+                with open(t_path, "r") as f:
+                    val = float(f.read().strip())
+                    if val > 0:
+                        cpu_temp = f"{val / 1000.0:.1f}°C"
+                        break
+        if cpu_temp == "N/A" and os.path.exists("/sys/class/hwmon"):
+            for h in os.listdir("/sys/class/hwmon"):
+                for input_f in os.listdir(os.path.join("/sys/class/hwmon", h)):
+                    if input_f.startswith("temp") and input_f.endswith("_input"):
+                        with open(os.path.join("/sys/class/hwmon", h, input_f), "r") as f:
+                            val = float(f.read().strip())
+                            if val > 0:
+                                cpu_temp = f"{val / 1000.0:.1f}°C"
+                                break
     except Exception:
         pass
 
-    disk_info = "N/A"
+    # Disk usage for root overlay/tmpfs
+    disk_info = "RAM (OverlayFS)"
     try:
-        ok, out = run_cmd("df -h / | awk 'NR==2 {print $3 \" / \" $2 \" (\" $5 \" used)\"}'")
-        if ok:
-            disk_info = out
+        st = os.statvfs("/")
+        total_gb = (st.f_blocks * st.f_frsize) / (1024**3)
+        free_gb = (st.f_bfree * st.f_frsize) / (1024**3)
+        used_gb = total_gb - free_gb
+        disk_info = f"{used_gb:.1f}G / {total_gb:.1f}G ({int((used_gb/total_gb)*100)}% used)"
     except Exception:
         pass
 
+    # Active Ethernet and WiFi detection via /sys/class/net and sysfs operstate
+    active_eth = "Disconnected"
     active_wifi = "Disconnected"
     try:
-        ok, out = run_cmd("nmcli -t -f active,ssid dev wifi 2>/dev/null | grep '^yes:' | cut -d: -f2")
-        if ok and out:
-            active_wifi = out
+        if os.path.exists("/sys/class/net"):
+            for iface in sorted(os.listdir("/sys/class/net")):
+                if iface == "lo":
+                    continue
+                oper_path = os.path.join("/sys/class/net", iface, "operstate")
+                carrier_path = os.path.join("/sys/class/net", iface, "carrier")
+                is_up = False
+                if os.path.isfile(oper_path):
+                    with open(oper_path, "r") as f:
+                        is_up = (f.read().strip() == "up")
+                if not is_up and os.path.isfile(carrier_path):
+                    try:
+                        with open(carrier_path, "r") as f:
+                            is_up = (f.read().strip() == "1")
+                    except Exception:
+                        pass
+
+                is_wireless = os.path.exists(os.path.join("/sys/class/net", iface, "wireless")) or iface.startswith("wl")
+                if is_wireless:
+                    if is_up:
+                        ok, out = run_cmd(f"iwgetid -r {iface} 2>/dev/null || nmcli -t -f active,ssid dev wifi 2>/dev/null | grep '^yes:' | cut -d: -f2")
+                        ssid = out.strip() if ok and out else "Connected"
+                        active_wifi = f"{ssid} ({iface})"
+                    elif active_wifi == "Disconnected":
+                        active_wifi = f"Available ({iface})"
+                else:
+                    if is_up:
+                        active_eth = f"Connected ({iface})"
+                    elif active_eth == "Disconnected":
+                        active_eth = f"Ready ({iface})"
     except Exception:
         pass
 
-    active_eth = "Disconnected"
-    try:
-        ok, out = run_cmd("nmcli -t -f DEVICE,TYPE,STATE dev 2>/dev/null | grep ':ethernet:connected' | cut -d: -f1")
-        if ok and out:
-            active_eth = f"Connected ({out.strip()})"
-    except Exception:
-        pass
-
-    # Fallback IP detection across all interfaces if socket connection fails
+    # Fallback IP detection across all interfaces
     if ip == "127.0.0.1":
         try:
             ok, out = run_cmd("ip -4 -o addr show scope global | awk '{print $4}' | cut -d/ -f1 | head -n 1")

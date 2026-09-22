@@ -16,7 +16,7 @@ TTYPath=/dev/tty1
 TTYReset=yes
 TTYVHangup=yes
 TTYVTDisallocate=yes
-ExecStart=/usr/bin/xinit /home/kiosk/.xinitrc -- /usr/bin/X :0 -nocursor -s 0 -dpms vt1
+ExecStart=/usr/bin/xinit /home/kiosk/.xinitrc -- /usr/bin/X :0 -s 0 -dpms vt1
 Restart=always
 RestartSec=2
 

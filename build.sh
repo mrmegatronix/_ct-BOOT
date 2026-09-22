@@ -148,7 +148,7 @@ EOF
         nano
 
     echo "=== Creating Kiosk User ==="
-    chroot "$CHROOT_DIR" useradd -m -s /bin/bash -G audio,video,input "$KIOSK_USER" || true
+    chroot "$CHROOT_DIR" useradd -m -s /bin/bash -G audio,video,input,sudo "$KIOSK_USER" || true
     chroot "$CHROOT_DIR" passwd -d "$KIOSK_USER" || true
 
     echo "=== Copying Overlay Files ==="
@@ -163,11 +163,14 @@ EOF
     fi
 
     echo "=== Setting Permissions & Enabling Services ==="
+    chmod 440 "${CHROOT_DIR}/etc/sudoers.d/kiosk" || true
     chmod 755 "${CHROOT_DIR}/usr/local/bin/kiosk-launch.sh" || true
+    chmod 755 "${CHROOT_DIR}/usr/local/bin/kiosk-server.py" || true
     chmod 755 "${CHROOT_DIR}/home/${KIOSK_USER}/.xinitrc" || true
     chroot "$CHROOT_DIR" chown -R "${KIOSK_USER}:${KIOSK_USER}" "/home/${KIOSK_USER}"
     chroot "$CHROOT_DIR" systemctl enable kiosk-mount.service
     chroot "$CHROOT_DIR" systemctl enable kiosk.service
+    chroot "$CHROOT_DIR" systemctl enable NetworkManager.service || true
     chroot "$CHROOT_DIR" systemctl set-default multi-user.target
 
     echo "=== Cleaning Apt Cache ==="

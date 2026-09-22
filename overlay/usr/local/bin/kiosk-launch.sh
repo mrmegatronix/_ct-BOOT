@@ -7,7 +7,15 @@ xset -dpms || true
 xset s off || true
 xset s noblank || true
 
-# Auto-activate wired Ethernet connections if link is present
+# Auto-activate wired Ethernet connections
+if [ -d "/sys/class/net" ]; then
+    for iface in /sys/class/net/*; do
+        dev=$(basename "$iface")
+        if [ "$dev" != "lo" ] && [ ! -d "$iface/wireless" ] && [[ ! "$dev" =~ ^wl ]]; then
+            sudo ip link set dev "$dev" up 2>/dev/null || true
+        fi
+    done
+fi
 if command -v nmcli >/dev/null 2>&1; then
     nmcli networking on 2>/dev/null || true
     for eth in $(nmcli -t -f DEVICE,TYPE dev 2>/dev/null | grep ':ethernet$' | cut -d: -f1); do
