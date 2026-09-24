@@ -137,34 +137,28 @@ grub-install \
     --boot-directory="$MNT_BOOT/boot" \
     "$TARGET_DEV"
 
-# Install UEFI 64-bit bootloader (/EFI/BOOT/BOOTX64.EFI)
-echo "Installing UEFI 64-bit bootloader..."
-grub-install \
-    --target=x86_64-efi \
-    --efi-directory="$MNT_BOOT" \
-    --boot-directory="$MNT_BOOT/boot" \
-    --bootloader-id=BOOT \
-    --removable \
-    --no-nvram
-
-# Install UEFI 32-bit bootloader (/EFI/BOOT/BOOTIA32.EFI for older Intel Atom/Core laptops)
-if [ -d "/usr/lib/grub/i386-efi" ]; then
-    echo "Installing UEFI 32-bit bootloader (IA32)..."
-    grub-install \
-        --target=i386-efi \
-        --efi-directory="$MNT_BOOT" \
-        --boot-directory="$MNT_BOOT/boot" \
-        --bootloader-id=BOOT \
-        --removable \
-        --no-nvram || true
-fi
-
-# Universal EFI stub to locate KIOSKBOOT independently of drive geometry
-cat << 'EOF' > "$MNT_BOOT/EFI/BOOT/grub.cfg"
+# Generate Self-Contained Standalone UEFI Bootloaders with embedded search logic
+echo "Generating Self-Contained Standalone UEFI bootloaders (BOOTX64.EFI & BOOTIA32.EFI)..."
+TMP_CFG=$(mktemp)
+cat << 'EOF' > "$TMP_CFG"
 search --no-floppy --set=root --label KIOSKBOOT
 set prefix=($root)/boot/grub
 configfile $prefix/grub.cfg
 EOF
+
+grub-mkstandalone \
+    -O x86_64-efi \
+    -o "$MNT_BOOT/EFI/BOOT/BOOTX64.EFI" \
+    "boot/grub/grub.cfg=$TMP_CFG"
+
+if [ -d "/usr/lib/grub/i386-efi" ]; then
+    grub-mkstandalone \
+        -O i386-efi \
+        -o "$MNT_BOOT/EFI/BOOT/BOOTIA32.EFI" \
+        "boot/grub/grub.cfg=$TMP_CFG"
+fi
+cp "$TMP_CFG" "$MNT_BOOT/EFI/BOOT/grub.cfg"
+rm -f "$TMP_CFG"
 
 echo "Writing Universal GRUB Configuration..."
 cat << 'EOF' > "$MNT_BOOT/boot/grub/grub.cfg"
